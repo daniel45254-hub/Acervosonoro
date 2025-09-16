@@ -1,0 +1,2759 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Acervo Musical - Pesquisa</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+h2 { margin-top: 0; }
+input { padding: 6px; width: 300px; margin-bottom: 12px; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 14px; }
+th { background: #eee; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+<h2>Pesquisa no Acervo</h2>
+<input type="text" id="search" placeholder="Digite para pesquisar...">
+<div id="table-container"></div>
+
+<script>
+// <<< COLE SUA PLANILHA AQUI ENTRE AS CRASES >>>
+const csvData = `
+Inventário	Artista	Albúm	Local	Obs	Ano
+64.1	Beniamino Gigli	Serenata 	C1 	Vinil	
+64.2	Miliza Konjus 	Voices Of Spring	C1 	Vinil	
+64.3	Robin Hood Dell Orchestra Philadelphia 	Bolero Maurimonte Sinphonique parte 3	C1 	Vinil	
+64.4	Beniamino Gigli	La Gioconda Cielo e Mar 	C1 	Vinil	
+64.5	Tito Schipa com Orquestra	A Partida Canção Espanhola 	C1	Vinil	
+64.6	Trio Celeste com Peruzzi E Sua Orquestra 	É Noite de Natal 	C1 	Vinil	
+64.7	Caramen Miranda com Orquestra Odeon 	Escreve Um Bilhetinho 	C1 	Vinil	
+64.8	Felix Perez Cardoso e seu trio  de Harpa e Guitarra 	La Cumparsita 	C1	Vinil	
+64.9	Orquestra Vnence Bohemia 	Andorinhas da Autria 	C1	Vinil	
+64.10	Orquestra Odeon 	Bilhetinho 	C1	Vinil	
+64.11	Silvio Caldas com cópia e Orquestra Odeon 	A saudade	C1 	Vinil	
+64.12	Les Freres Mendinger et leur orquestry Musette avec Florence Passy 	Anges Noirs Rumba Bolero 	C1	Vinil	
+64.13	Nano Rodrigo y su  Orquestra 	Perfidia Bolero com Stribillo	C1	Vinil	
+64.14	Martha Eg Gerh Com acomp. Orchestra 	Serenata (Staendchen) Filme: A Siynphonia Inacaba 	C1	Vinil	
+64.15	Carlos Ramirez ç/a Org e Aro dos Estudios da M.G.M 	A little marc of you amor  	C1	Vinil	
+64.16	Victor youring regendo a Orquestra Simfônica  da Paramount 	Canção de Dalila 	C1	Vinil	
+64.17	Imperio Argetina acomp.Orq.Sevilla	 Maria Del Carmen	C1	Vinil	
+64.18	Francisco Allamise com Orquestra 	Mandulinata a Surriemento  Canção Napolitana 	C1	Vinil	
+64.19 	Frankie Larme 	Jezebel	C1	Vinil	
+64.20	Bing Crosery whit Xavier Cugat andevis Waldorf Astriria Orchestra	Hasta Manana	C1 	Vinil	
+64.21	George Melachrino Orq. de cordas 	Sleepy Lagoon	C1	Vinil	
+64.22	Peter Kreuder e seus solistas 	Peter Kreuder - Melodias Vienenses	C1	Vinil	
+64.23	The Three Sins	Jingle Bells 	C1	Vinil	
+64.24	Mario Gennari Filho 	Tico -  Tico no Fubá	C1 	Vinil	
+64.25	Vera Lucia com acomp. de Regional 	Perdão Amor 	C1	Vinil	
+64.26	Nuno Roland com Chiquinho e sua Orquestra 	Quem é que está com a razão 	C1	Vinil	
+64.27	Cyro Monteiro com Regional 	Meu Trabalho 	C1	Vinil	
+64.28	Enzo de Muro Lornanto com acomp. de Orquestra e Coro 	Marechare 	C1	Vinil	
+64.29	Araci de Almeida com Radamés e sua Orquestra de Cordas 	O orvalho vem caindo 	C1	Vinil	
+64.30	Orquestra Tipica Argentina Bachacha  	Garupa Mamá yo quiero un novio 	C1	Vinil	
+64.31	Rodolfo Mayer	Carta a mãe distante 	C1	Vinil	
+64.32	Jean Sabion com Orquestra	La ve in Rose 	C1	Vinil	
+64.33	Borrah Minivitch 	Hungarian Rhapsody 	C1	Vinil	
+64.34	Roberto Ingloz e sua Orquestra 	Noturno Serenata 	C1	Vinil	
+64.35	Festival da Música Ppopular 	Disco n°1 Concertos Populares 1	C1	Vinil	
+64.36	Festival da Música Popular 	Disco n°2 Concertos Populares 2	C1	Vinil	
+64.37	Festival de Música Popular 	Disco n°3 Músicas de Filme 	C1	Vinil	
+64.38	Festival de Música Popular 	Disco n°7 Música para Repousar 	C1	Vinil	
+64.39	Festival de Música Popular 	Disco n°8 Valsa Ritmos Latinos para Dançar 	C1	Vinil	
+64.40	Festival de Música Popular 	Disco n°4 Músicas de Filmes 2	C1	Vinil	
+64.41	Maysa	Maya e Maysa 	C1	Vinil	
+64.42	Libertad Lamarque 	Sem Palavras 	C1	Vinil	
+64:43:00	Wess & Dori Ghezzi       	Iu nella mi vita 	C1	Vinil	
+64.44	Burt  Bacharach	Portrain in Music	C1	Vinil	
+64.45	Herivelto Marthins 	Serie inesquecivel grandes compositores 	C1	Vinil	
+64.46	Francy Dancer	One Way 	C1	Vinil	
+64.47	Vários Coletânia (Som Livre)	Avant Premure (Os 14 mais da Aldeia Global) 	C1	Vinil	
+64.48	Gregorio Barrios 	As antigas de Gregorio Barrios em Hi-fi 	C1	Vinil	
+64.49	Vários Coletânia (Som Livre)	Te Contei? ( Internacional) 	C1	Vinil	
+64.50	Tina Turner 	Private Dancer 	C1	Vinil	
+64.51	Varios Coletania 	Sucessos da Manchete 	C1	Vinil	
+64.52	Foxy 	Get Off 	C1	Vinil	
+64.53	Skyy	Skyyliight 	C1	Vinil	1976
+64.54	Varios/Coletania 	Discotheque Jet Music 	C1	Vinil	1985
+64.55	Varios/Coletania 	Cash Bo Vol. IV Som acima do normal 	C1	Vinil	
+64.56	S' Express 	Original Soundtrack	C1 	Vinil	1989
+64.57	C.J & Co. 	Deaduje Dick 	C1	Vinil	1978
+64.58	Vários/Coletânia 	Discoteca Hippopotamus Vol. 4 	C1	Vinil	1977
+64.59	Kurtis Blow 	Ego Trip 	C1	Vinil	1984
+64.60	Kc and the Sunshine Band 	Do you wona go party 	C1	Vinil	1979
+64.61	Freddie Jackson 	Rock me tonight Unlinited 	C1	Vinil	1985
+64.62	Roger	Unlimited	C1	Vinil	1988
+64.63	Powerlight	Eart wivind & fire 	C1	Vinil	1982
+64.64	Tete Espindola 	Escrito nas Estrelas 	C1	Vinil	1985
+64.65	Paul Mccartney and wings 	Band on the run	C1	Vinil	1974
+64.66	ABBA 	10 anos 	C1	Vinil	1981
+64.67	Erasmo Carlos 	O Tremendão 	C1	Vinil	
+64.68	The Fevers	A explosão Musical dos Fevers 	C1	Vinil	1971
+64.69	Corelli	Mestres da Música 	C1	Vinil	1983
+64.70	Conservatório Musical Adventista 	Conservatório Musical Adventista 	C1	Vinil	
+64.71	Polegar 	Polegar 	C1	Vinil	1989
+64.72	Kenny Rogers	Liberty	C1	Vinil	1977
+64.73	Coletânia 	Saturday Night  Fever	C1	Vinil	1978
+64.74	Sandra Sa 	Sandra Sa 	C1	Vinil	1986
+64.75	Chantecler 	Chantecler	C1	Vinil	1991
+64.76	Festival de Música Popular 	Disco n°5  Marchas Militares 	C1	Vinil	
+64.77	Festival de Música Popular 	Disco n°6 Musicas para jantar 	C1	Vinil	
+64.78	Ray Conniff	Ray Conniff Sconcert 	C1	Vinil	
+64.79	Paulo Fortes 	Termas e eternas seristas 	C2	Vinil	1980
+64.80	Queen 	The Game 	C2	Vinil	1979
+64.81	Vários/Coletânia 	Fados  	C2	Vinil	1974
+64.82	Vivaldi 	As quatros estaçoes 	C2	Vinil	1970
+64.83	P. I. Ichaikovisky	Sinfonia n°6 Pathetique 	C2	Vinil	1970
+64.84	Bachman - Turner Overdrive 	Bachaman Turner Overdrive 2	C2	Vinil	1974
+64.85	Titãs	Cabeça Dinossauro 	C2	Vinil	1989
+64.86	Haroldo Lobo 	 Nova Historia da Musica Popular Brasileira  (serie) 	C2	Vinil	1977
+64.87	Titãs  	Go Back 	C2	Vinil	
+64.88	Marcus Viana 	Pantanal Suite Sinfonica 	C2	Vinil	1990
+64.89	Vários/Coletânia 	 Gente do choro 	C2	Vinil	1962
+64.90	Vários/Coletânia 	Coreana 	C2	Vinil	1988
+64.91	Ters for fears 	The seeds of love 	C2	Vinil	1989
+64.92	Great songs of Bacharach & David 	Great songs of Bacharach & David 	C2	Vinil	1972
+64.93	The Beatles 	Help 	C2	Vinil	1965
+64.94	Coletânia Novela 	Meu Bem Meu Mal	C2	Vinil	1990
+64.95	Renato e seus Blue	Renato e seus Blue Caps 	C2	Vinil	1971
+64.96	Vários/Coletânia 	Percussion around world 	C2	Vinil	
+64.97	Overture	Overture	C2	Vinil	1970
+64.98	Dia da Parada 	Dia da Parada 	C2	Vinil	
+64.99	Varios 	Jet Black 5 - O peso do Funk Music 	C2	Vinil	1989
+64.100	Titãs  	Televisão	C2	Vinil	1989
+64.101	Kiss 	Kiss	C2	Vinil	1974
+64.102	Kid Abelha e os Aboboras Selvagens 	Seu Espião	C2	Vinil	1984
+64.103	The Beatles 	The Beatles 	C2	Vinil	1965
+64.104	The Beatles 	Beatles Again 	C2	Vinil	1964
+64.105	Coletânia 	As doze mais  de Sam Remo 	C2	Vinil	
+64.106	Luciano Pavarotte 	Cançoes Napolitanas 	C2	Vinil	1979
+64.107	Festival da Música Brasileira 	Disco n°10 MPB	C2	Vinil	
+64.108	Festival da Música Brasileira 	Disco n°09 MPB	C2	Vinil	
+64.109	 Ray Conniff 	Ray Conniff 's concert 	C2	Vinil	
+64.110	Os Saltimbancos 	Os Salimbancos 	C2	Vinil	1977
+64.111	Sereverino Araujo Teleco-teco em cordas 	Orquestra romântica de Severino Araujo	C2	Vinil	
+64.112	Glenn Miller 	The Goeat Glenn 	C2	Vinil	
+64.113	The best of the Lettermen 	The best of the Lettermen 	C2	Vinil	
+64.114	Spyro Gura 	Morning Dana 	C2	Vinil	1979
+64.115	The Beatles 	The Beatles 1963- 1966	C2	Vinil	1973
+64.116	The Sinfônia of London Orchestra 	Batman The best of 	C2	Vinil	1989
+64.117	Joe Cocker 	Joe Cocker 	C2	Vinil	1992
+64.118	Enya 	Watermark	C2	Vinil	1989
+64.119	Rick Wakeman	The Myths and lengends of king Arthur and the knights of the raund talbe 	C2	Vinil	1975
+64.120	Razão Brasileira 	Razão Brasileira 	C2	Vinil	1993
+64.121	Marisa Monte 	Marisa Monte 	C2	Vinil	1989
+64.122	Raul Seixas 	Caminhos 	C2	Vinil	1986
+64.123	Carl Orff	Carmina Burana 	C2	Vinil	1977
+64.124	Elomar 	Das barrancas do rio gavião 	C2	Vinil	1978
+64.125	Chico Buarque 	Chicocanta 	C2	Vinil	
+64.126	Trilha de filme 	Labyrinth	C2	Vinil	1986
+64.127	Mahavshnu Joh'n Mc Laughlin	My goal's beyond	C2	Vinil	1975
+64.128	Billie Holiday 	Gigantes do Jazz Billie Holiday 	C2	Vinil	1980
+64.129	Trilha de filme 	Blade Runner 	C2	Vinil	1986
+64.130	The Beatles 	Sgt Pepper's Lonely - Hearts Club Band 	C2	Vinil	1967
+64.131	Maria Bethânia 	Pássaro proibido 	C2	Vinil	1976
+64.132	Ldwing van Beethoven (série Deutsche) 	Sinfônia n°6 Op. 68 (Pastoral) 	C2	Vinil	
+64.133	Caroline King 	Tapestry	C2	Vinil	1971
+64.134	Tetê Espindola 	Gaiola 	C2	Vinil	1985
+64.135	Andreas Vollenwider & Friends 	White Winds ( Seeker's Gourney)  	C2	Vinil	1984
+64.136	Carpenters 	The singles 1969 - 1973 	C2	Vinil	1974
+64.137	Rita Lee 	Rita Lee 	C2	Vinil	1980
+64.138	Zizi Possi 	Amor e Música 	C2	Vinil	1987
+64.139	Simone 	Face a Face 	C2	Vinil	1977
+64.140	Eduardo Dusek 	Dusek na sua  	C2	Vinil	1986
+64.141	Balão Mágico 	A turma do balão mágico 	C2	Vinil	1984
+64.142	Leonard Bernstun 	Handel: Músicas 	C2	Vinil	
+64.143	Simon and Garfunkel's 	Greatest Bits 	C2	Vinil	1972
+64.144	Maria Bethânia 	Mel	C2	Vinil	1979
+64.145	Boston Pops Fiedler 	Clássicos Ligeiros 	C2	Vinil	
+64.146	Vários 	Leswingle singers eo barroco 	C2	Vinil	
+64.147	Sir Malcolm Sargent e a Royal Phillarmonic Orquestra	Tchaikorsky abertura 1812	C2	Vinil	
+64.148	Vários 	Os clássicos mais populares do mundo 3	C3	Vinil	1974
+64.149	Astor Piazzolla 	Libertanzo 	C3	Vinil	1974
+64.150	Duke Ellington 	Gigantes do Jazz Duke Elllington 	C3	Vinil	1980
+64.151	Vinícius de Moraes 	A arca de Noé 	C3	Vinil	
+64.152	Maria Bethânia 	Rosa dos Ventos 	C3	Vinil	
+64.153	Carly Simon 	No Secrets 	C3	Vinil	1972
+64.154	Donna Summer 	A love Trilogy	C3	Vinil	1976
+64.155	Bruce Springsteen 	Bom in the USA 	C3	Vinil	1984
+64.156	Billie Holiday 	All or nothing at all 	C3	Vinil	1983
+64.157	Zimbo Trio 	Tristeza 	C3	Vinil	
+64.158	Super double mix 	Super double mix	C3	Vinil	1984
+64.159	Rick James 	Glow 	C3	Vinil	1985
+64.160	Abílio Manoel 	Velho de guerra	C3	Vinil	1973
+64.161	Matogrosso e Mathias 	Dona do meus sentimentos vol.15	C3	Vinil	1994
+64.162	Marília Medalha 	Caminhada	C3	Vinil	1973
+64.163	Orlando Silva, Francisco Alves, Vicente Celeste 	In memorian Os gandes sucessos dos Inesquecíveis 	C3	Vinil	1982
+64.164	Francisco Petrônio e Delirmando Reis 	Uma voz e um vidão em serenata vol.3 	C3	Vinil	1962
+64.165	Francisco Petrônio e Delirmando Reis 	Uma voz e um vidão em serenata 	C3	Vinil	1962
+64.166	Elizeth Cardoso, Jacob do bandolin, Zimbo Trio e Época de ouro 	Fragmentos ineditos do histórico recital realizado no teatro joão Caetano em 19/02/1968	C3	Vinil	1977
+64.167	Carmen Costa 	30 anos depois 	C3	Vinil	1973
+64.168	Bachman Turner Overdrive	No fragile 	C3	Vinil	1974
+64.169	Delarge	All this love 	C3	Vinil	1983
+64.170	Coletânia 	Se ligue nessas 	C3	Vinil	1982
+64.171	Coletânia Trilha de filme	Saltimbancos Atrapalhados 	C3	Vinil	1981
+64.172	Vários/Coletânia 	Bandeirantes FM	C3	Vinil	1985
+64.173	Roger Laredo and evis orchestra 	Italy	C3	Vinil	1971
+64.174	Leopold Stokowski e New Philhamonia Orchestra 	O lago dos cisnei e a Bela adormercida 	C3	Vinil	1971
+64.175	Luis Bordón 	A harpa e a cristandade 	C3	Vinil	
+64.176	Ultraje a rigor 	Sexo 	C3	Vinil	1987
+64.177	Trilha de filme 	Stardust duplo	C3	Vinil	1974
+64.178	Trilha de novela 	Água viva 	C3	Vinil	1980
+64.179	Trilha de filme 	O pequeno ríncipe 	C3	Vinil	1975
+64.180	Elizeth Cardoso e Ciro Monteiro 	A bossa eterna 	C3	Vinil	
+64.181	Led Zippelim 	Led Zippelim 	C3	Vinil	1914
+64.182	Titãs  	Jesus não tem dentes no país dos banguelas 	C3	Vinil	
+64.183	Luis Goes 	O melhor de Luis Goes 	C3	Vinil	1989
+64.184	Carlos Magno 	O bom é o Juca 	C3	Vinil	1974
+64.185	Taiguara	Carne e Osso 	C3	Vinil	1971
+64.186	We're an american band 	Grand funk 	C3	Vinil	1973
+64.187	Rauboad 	Grand funk 	C3	Vinil	1972
+64.188	Eduardo Gudim 	Eduardo gudim 	C3	Vinil	1973
+64.189	Trilha de filme 	More derty dancing 	C3	Vinil	1988
+64.190	Amandio Presents 	Sotão discotheque 	C3	Vinil	1977
+64.191	Gilberto Gil 	Expresso 2222	C3	Vinil	1972
+64.192	Rita Lee	Rita Lee 	C3	Vinil	1982
+64.193	Heitor Viela Lobos 	As noves bachianas brasileiras vol.4 Bachiana n° 8 e 9 	C3	Vinil	1965
+64.194	José Afonso 	Fura fura 	C3	Vinil	1978/79
+64.195	Oswaldo Sbarro e conjunto serenata, Carlinhos Mafasoli 	Valsas brasileiras	C3	Vinil	1980
+64.196	Ray Conniff e os cantores 	Turn around look at me 	C3	Vinil	1969
+64.197	Maria Creuza 	Eu sei que vou te amar 	C3	Vinil	1972
+64.198	Trilha de série especial 	Pirilimpimpim 	C3	Vinil	1982
+64.199	As professorinhas 	Cantando e contando a história do Brasil 	C3	Vinil	1981
+64.200	Rita Lee e Roberto Carvalho 	Rita Lee 	C3	Vinil	1982
+64.201	João Maria de Abreu 	Tangos 	C3	Vinil	1980
+64.202	Odette Ernest Dias,Elza K. Gushikem e Jaime E Dias 	Sarau Brasileiro 	C3	Vinil	1979
+64.203	Tânia Alvez 	Dona de mim 	C3	Vinil	1986
+64.204	José Afonso 	Coro do tribinais 	C3	Vinil	1974
+64.205	Trilha de filme 	Tio Remus (Versão brasileira canção do sul) 	C3	Vinil	1974
+64.206	Apatotinha	Brincando de roda numa discotheque 	C3	Vinil	1978
+64.207	Jovem guarda vários 	Jovem guarda vol.2 	C3	Vinil	1982
+64.208	Ronnie Aldrick e London Festival Orchestra	For young lovers 	C3	Vinil	1969
+64.209	Charles Munch and New Philamornia Orchestra 	Gaité Parisinne	C3	Vinil	1970
+64.210	Werner Muller and Kis Orchestra 	Vienna	C3	Vinil	1969
+64.211	Ivan Lins 	Personalidade 	C3	Vinil	1987
+64.212	Benito de Paula e seus convidados 	Copacabana 	C3	Vinil	1975
+64.213	Elton Jhon, Elvis Presly and Poul Mc Carteney 	Floweyrs	C3	Vinil	1979
+64.214	Antônio Carlos Jobim 	Música popular brasileira 	C3	Vinil	1970
+64.215	Paulinho da Viola 	A dança da solidão 	C3	Vinil	1972
+64.216	João Gilberto 	 João 	C3	Vinil	1991
+64.217	The J. J. Jhonson  Owintet 	J. J. in Person 	C3	Vinil	1978
+64.218	Gonzaguinha 	Gonzaguinha 	C4	Vinil	1984
+64.219	Louis Armstrong	Gigantes do Jazz- A personificação do Jazz	C4	Vinil	1980
+64.220	Jessé	Estrela de papel 	C4	Vinil	1983
+64.221	Milton Nascimento 	Música popular brasileira 	C4	Vinil	1994
+64.222	Dorival Caymmi 	Música popular brasileira 	C4	Vinil	1982
+64.223	Gastão Formenti 	Música popular brasileira 	C4	Vinil	1974
+64.224	Maysa	Canção do amor triste 	C4	Vinil	1962
+64.225	Maysa 	Os grandes sucessos de Maysa 	C4	Vinil	1968
+64.226	Trio los Panchos 	14 grandes sucessos o trio los Panchos 	C4	Vinil	1975
+64.227	Quarteto in Cy 	Antologia do samba canção 	C4	Vinil	1975
+64.228	Orlando Silva 	Orlando Silva 	C4	Vinil	1978
+64.229	Gilberto Gil	Música popular brasileira	C4	Vinil	1983
+64.230	NÃO LOCALIZADO 			Vinil	
+64.231	NÃO LOCALIZADO 			Vinil	
+64.232	Custódio Mesquita 	Música popular brasileira 	C4	Vinil	
+64.233	Os grandes sucessos do carequinha 		C4	Vinil	
+64.234	Altamiro Carrilho e sua bandinha 		C4	Vinil	
+64.235	Dorival Caymni 	Eu não tenho onde morar 	C4	Vinil	
+64.236	Carlos Galhado 	Se essa rua fosse minha 	C4	Vinil	
+64.237	Canhoto da Paraiba 	O violão brasileiro trocado pelo avesso 	C4	Vinil	
+64.238	NÃO LOCALIZADO	NÃO LOCALIZADO 	C4	Vinil	
+64.239	Fernando Machado Soares 	Serenata 	C4	Vinil	
+64.240	Elizete Interpreta 		C4	Vinil	
+64.241	Carlos Ramos 	Saudade	C4	Vinil	
+64.242	Altemar Dutra 	Altemar Dutra 	C4	Vinil	
+64.243	Maestro Petek 	 Valsas eternas 	C4	Vinil	
+64.244	Glenn Miller 	Monn Light Serenade 	C4	Vinil	
+64.245	Billy Yaughn 	And His Orchestra 	C4	Vinil	
+64.246	Guilherme Arantes	Romances Modernos 	C4	Vinil	
+64.247		Bossa Nova	C4	Vinil	
+64.248	Antonio Carlos e Joca Filho 	Louvado Seja 	C4	Vinil	
+64.249	NÃO LOCALIZADO 	NÃO LOCALIZADO		Vinil	
+64.250	NÃO LOCALIZADO	NÃO LOCALIZADO		Vinil	
+64.251	Dick Franey 	Noite 	C4	Vinil	
+64.252	Dinermando RF.F Fran. P 	Uma voz e um violão em serenata vol. 5 	C4	Vinil	
+64.253	On the floor fatback mellow Madness	On the floop with fatback 	C4	Vinil	
+64.254	Chitãozinho e Xororó	Nossas canções preferidas 	C4	Vinil	
+64.255	101  Strings	The soul of spain vol. II	C4	Vinil	
+64.256	Giacomo puccini	Puccini's Bigests hits 	C4	Vinil	
+64.257	Guiomar Novaes 	Chopin nocturnes (complete) vol. I 	C4	Vinil	
+64.258	Guiomar Novaes 	Chopin nocturnes (complete) vol. II	C4	Vinil	
+64.259	Caruso Lo Lanza 	Great tenors sing neapolitan songs 	C4	Vinil	
+64.260	René Kollo Tenor 	No mundo da opereta quiereme mucho orchestra romanticos de cubia 	C4	Vinil	
+64.261	NÃO LOCALIZADO 		C4	Vinil	
+64.262	Amalia & Vinicius 	Amalia & Vinicius 	C4	Vinil	
+64.263		Eagles	C4	Vinil	
+64.264		O espirito do natal 	C4	Vinil	
+64.265	Marcus e Mateus 	Retrato da vida 	C4	Vinil	
+64.266	Chitãozinho e Xororó 	Os menios do Brasil 	C4	Vinil	
+64.267	2 Discos	Best Sellers	C4	Vinil	
+64.268		Que rei sou eu ?	C4	Vinil	
+64.269		Sertanejo 86 	C4	Vinil	
+64.270		Carinhoso 	C4	Vinil	
+64.271		Semideus	C4	Vinil	
+64.272	Simone 	Show gravado no canecão	C4	Vinil	
+64.273	Jhon Travolta - Olivia Newton - Jhon 	Grease 2 disco	C4	Vinil	
+64.274		O fino do Bolero	C4	Vinil	
+64.275	NÃO LOCALIZADO 			Vinil	
+64.276		Genesis- we can't dance	C5	Vinil	
+64.277		Disco de ouro II	C5	Vinil	
+64.278	Marecello Gardinale 	Sua orquestra de dança 	C5	Vinil	
+64.279	NÃO LOCALIZADO		C5	Vinil	
+64.280		Itália mia - Mantorini 	C5	Vinil	
+64.281	NÃO LOCALIZADO 		C5	Vinil	
+64.282	NÃO LOCALIZADO 		C5	Vinil	
+64.283	NÃO LOCALIZADO		C5	Vinil	
+64.284	NÃO LOCALIZADO 		C5	Vinil	
+64.285	NÃO LOCALIZADO 		C5	Vinil	
+64.286		História de um bandolim  - Luperce Miranda 	C5	Vinil	
+64.287	Claudio Villa 	Grandes sucessos naplitanos	C5	Vinil	
+64.288	Poul Mauriat 	A grande orquestra 	C5	Vinil	
+64.289	Beethoven	Boulez Rege	C5	Vinil	
+64.290	Pixinguinha	Este homem é um poema 	C5	Vinil	
+64.291	Heitor Villa Lobos 	As nove bachianas brasileiras vol. 2 	C5	Vinil	
+64.292	Heitor Villa Lobos 	As nove bachianas braileiras vol. 1 	C5	Vinil	
+64.293		Você é o cantor ? 	C5	Vinil	
+64.294	Manolo Otero 	Manolo Otero 	C5	Vinil	
+64.295	Chitãozinho e Xororó 	Aguenta coração 	C5	Vinil	
+64.296	Lulu Santos 	O último romântico II	C5	Vinil	
+64.297	Markinhos Mour 	Sabor de mim 	C5	Vinil	
+64.298		Felicidade 	C5	Vinil	
+64.299	Darius Milhaud 	Saudade do Brasil  	C5	Vinil	
+64.300	Guilherme Arantes  	Guilherme Arantes  	C5	Vinil	
+64.301	Beniano Gigli 	Joias da canção 	C5	Vinil	
+64.302	Sergio Divani 	Em lance matrimonial 	C5	Vinil	
+64.303	Nico Fidenco 	Orquetra de Enriquez 	C5	Vinil	
+64.304	Gregorio Barrios 	Vereda tropical 	C5	Vinil	
+64.305	Gregorio Barrios 	30 anos de canciones latinas 	C5	Vinil	
+64.306	Ornelia Vanoni - Vinicius de Morais - Toquinho 	La voglia la pazzia l' inconscienza	C5	Vinil	
+64.307	Jean Sibelius 	Sibelius biggest hits ( Jean Sibelius, 1865-1957)	C5 	Vinil	1972
+64.308	José Maria Madrid  e Alberto Del Mont 	Granada	C5	Vinil	
+64.309	Anne Murray 	Let's keep it that way	C5	Vinil	1978
+64.310	Roger Willians	Love thenne fron "the godfather" 	C5	Vinil	1972
+64.311	Silvio Caldas 	Silvio Caldas 	C5	Vinil	
+64.312	Dionne 	Dionne Warwick 	C5	Vinil	1979
+64.313	Vivalde the four seasons 	Seleção Rener dos grandes mestres vol. I 	C5	Vinil	1986
+64.314	Vários 	Disco very spacial  	C5	Vinil	1978
+64.315	Bananarana 	Vênus 	C5	Vinil	1986
+64.316	Dire Straits	Brothersbin arms 	C5	Vinil	1989
+64.317	Roberto Carlos 	Roberto Carlos 	C5	Vinil	1981
+64.318	Vários 	Ruído jovem 	C5	Vinil	1974
+64.319	Vários 	US Top Disco Dance 	C5	Vinil	1979
+64.320	Vários 	Disco 83 New York City Discotheque 	C5	Vinil	1982
+64.321	Vários 	New York City Discotheque	C5	Vinil	1985
+64.322	Agnaldo Rayol 	As minhas preferidas na voz de Agnald Rayol 	C5	Vinil	1968
+64.323	Walter Calmon e seu conjunto 	Um piano no choro 	C5	Vinil	1984
+64.324	Vinicíus de Moraes e Toquinho 	Vinicíus canta "Nossa filha Gabriela"	C5	Vinil	1972
+64.325	Chitãozinho e Xororó 	Os grandes sucessos 	C5	Vinil	1987
+64.326	Dulce Quintal 	Délicia 	C5	Vinil	1985
+64.327	Spyro Gyra 	Catching the sun 	C5	Vinil	1980
+64.328	Stan Getz 	Big band bossa nova 	C5	Vinil	
+64.329	Serge Rachmaninoff 	Deutsche granmophon Gisellschalf concero n°2 piano e Orq.	C5	Vinil	
+64.330	Plaa Vendôme 	 O modern jazz quartet 	C5	Vinil	1967
+64.331	Trilha de novela 	Roque Santero 	C5	Vinil	1985
+64.332	Lupicinio Rodrigues 	Dor de cotovelo 	C5	Vinil	1973
+64.333	Daniela Mercury 	O canto da cidade 	C5	Vinil	1992
+64.334	R. E. M. 	Out of time 	C5	Vinil	1991
+64.335	Caetano Veloso	Personalidade 	C5	Vinil	1987
+64.336	Dick Danello 	Parlando de amor 	C5	Vinil	1983
+64.337	The Beatles 	Músicas do filme "Os rus do ié,ié,ié 	C5	Vinil	1964
+64.338	Trlha de novela	Tieta	C5	Vinil	1989
+64.339	Trilha de novela 	O dono do mundo	C5	Vinil	1991
+64.340	Carlos Poyares e regional 	Brasil seresta 	C5	Vinil	1974
+64.341	Fernando Machado Soares 	Coimbra tem mais encanto 	C5	Vinil	1986
+64.342	Edú Lobo 	Edú Lobo 	C5	Vinil	1973
+64.343	Dalva de Oliveira, Herivelton Marthins e Nilo Chagas 	O famoso trio de ouro 	C5	Vinil	1969
+64.344	Nelson Rogrigues 	Nelson interpreta Noel 	C5	Vinil	1971
+64.345	Caravelli 	Aranjuez  mon amour 	C5	Vinil	1968
+64.346	Vários 	Lambateria tropical 2 	C5	Vinil	1989
+64.347	Triha de novela	Meu bem, meu mal 	C5	Vinil	1990
+64.348	Menudo	Reaching out 	C5	Vinil	1984
+64.349	Menudo 	Menudo mania 	C5 	Vinil	1984
+64.350	Trilha de filme 	Disco baby vol 3 	C5	Vinil	1979
+64.351	Vários 	Rock in Rio nacional 	C5	Vinil	1984
+64.352	Trilha de novela 	Vamp internacional 	C5	Vinil	1991
+64.353	Pedrinho Mattar	Pedrinho Mattar	C5	Vinil	1978
+64.354	Beniamino  Gigli, Mario Del Monaco, Jussi B. Tito S.	Vozes de ouro 	C5	Vinil	
+64.355	Composição do folclore 	Natal brasileiro pastoral lapinha 	C5	Vinil	1977
+64.356	Ana Maria Brandão e sinhô ( autor ) 	Grandes autores, grandes interpretes 	C5	Vinil	1978
+64.357	Jubert de Carvalho ( Interprete : José Tobias ) 	Grandes autores, grandes interpretes 	C5	Vinil	1978
+64.358	Evandro e seu regional 	Brasil,flauta,bandolim e violão 	C5	Vinil	1978
+64.359	Vários 	Samba dá saudade	C5	Vinil	1974
+64.360	Vários 	Remix hits 	C5	Vinil	1981
+64.361	Davi Maclean 	Me and you	C6	Vinil	1973
+64.362	Crash	The human league 	C6	Vinil	1986
+64.363	Ultraje a rigor 	Sexo	C6	Vinil	1987
+64.364	Angela Maria 	Angela Maria vol 2	C6	Vinil	
+64.365	Werner Muller e sua orquestra 	Mozart 40	C6	Vinil	1971
+64.366	Sousa Marchis 	Band of the grenadier guards 	C6	Vinil	1969
+64.367	Frank Chackfield	Filme festival	C6	Vinil	1969
+64.368	Henry Lewis e the Royal Philharmonic Orchestra 	Becthoven sinfônia n°6	C6	Vinil	1971
+64.369	The Jacques Loussier Trio	Concerto de Brandenburgo n°5 de Bach	C6	Vinil	1970
+64.370	Leopold Stokowski 	Ichaikovsky- Romeu e Julieta 	C6	Vinil	1970
+64.371	Toquinho e Vinicius de Moraes 	Um pouco de Ilusão 	C6	Vinil	
+64.372	Henry K. Szeryng 	Nicolo Paganini 	C6	Vinil	1971
+64.373	Stanley Black and orchestra 	The musical of lecuona	C6	Vinil	
+64.374	Mario Lanza 	Camden 	C6	Vinil	1968
+64.375	Hebert Von Karayan e Orquestra Filamôrnica de V. 	Richard Strauss	C6	Vinil	1972
+64.376	Orquestra Filamôrnica  de Berlin e Hebert Von K. 	Igor Stravinsky: A consagração da primavera 	C6	Vinil	1971
+64.377	Vários 	Coros favoritos 	C6	Vinil	1971
+64.378	Magda  Tagliaferro	Magda Tagliaferro Interpreta: Heitor Villa Lobos 	C6	Vinil	1972
+64.379	Francisco Petrônio com Chico Moraes Orq. e Coro	O grande baile da saudade vol.2 	C6	Vinil	1970
+64.380	The internacional pop orchestra 	The internacional pop orchestra 	C6	Vinil	1962
+64.381	Svatoslav Richter	Robert Schumann 	C6	Vinil	1970
+64.382	Monswer Gilbert Avec Marie 	Chansons d'amour 	C6	Vinil	1989
+64.383	Focus	Focus III	C6	Vinil	973
+64.384	Vários 	Karaokê	C6	Vinil	1985
+64.385	Vários 	O fino do bolero vol. II	C6	Vinil	1980
+64.386	Glenn Miller 	A inesquecível orquestra Glenn Miller 	C6	Vinil	1975
+64.387	Vários 	Aeiourca	C6	Vinil	1990
+64.388	Flabanda	Baile do vermelho e petro	C6	Vinil	1980
+64.389	Nat King Cole 	The best of Nat King Cole 	C6	Vinil	1971
+64.390	Nat King Cole 	Saudades de Nat King Cole 	C6	Vinil	1984
+64.391	Orquestra sonora do Caribe 	 Noche de ronda/ Rumbas 	C6	Vinil	
+64.392	Trlilhas de filme 	Melodia imortal 	C6	Vinil	1966
+64.393	Montovani e sua orquestra	Tesouro de melodias 	C6	Vinil	
+64.394	A turma do lambe lambe / Daniel Azulay 	Algodão doce 	C6	Vinil	1980
+64.395	Montovani e sua orquestra	The Montovani touch 	C6	Vinil	1968
+64.396	Francisco Alves	Os grandes sucessos de Francisco Alves	C6	Vinil	1963
+64.397	Vários 	Choro no céu: Choros famoos solistas inesquecíveis	C6	Vinil	1986
+64.398	Elizeth Cardoso e Ataulfo Jr. 	Leva meu samba 	C6	Vinil	1984
+64.399	Maysa 	Canecão apresenta	C6	Vinil	1969
+64.400	Nora Ney 	Tire o seu soriso do caminho 	C9	Vinil	1972
+64.401	Orquestra Philamornica e Hebert von Karajam 	Groacchino Rossini	C6	Vinil	1961
+64.402	Jean Michel Jarre 	Jean Michel Jarre  concerts Lijon/ Houston 	C6	Vinil	1987
+64.403	Os violinos mágicos 	Os violinos mágicos 	C6	Vinil	
+64.404	Carmen Carvalho 	The best of Carmen Carvalho 	C6	Vinil	
+64.405	Natan Scwartzman 	Natan Scwartzman internacional 	C6	Vinil	1971
+64.406	Orquestra Filamôrnica de Londres reg: Eliahu Inbal 	Frederic Chopin	C6	Vinil	1978
+64.407	Johnny Mathis com Orquestra 	My love for you 	C6	Vinil	1971
+64.408	Angélica 	Angélica 	C6	Vinil	1988
+64.409	Maria Creuza 	Maria Creuza 	C6	Vinil	1972
+64.410	Vários 	Festival dos festivais 	C6	Vinil	1985
+64.411	Trilha de novela 	Renascer	C6	Vinil	1993
+64.412	Gli Anni Moderni	I piu grand sucessi di ...	C6	Vinil	1969
+64.413	Chitãozinho e Xororó 	Planeta azul	C6	Vinil	1991
+64.414	Mauro Diniz 	Cantar a paz 	C6	Vinil	1987
+64.415	Vários 	Frevo ao vivo	C6	Vinil	1974
+64.416	Trilha de filme 	Thovoighly modern Millie 	C6	Vinil	1967
+64.417	Trilha de novela 	Lua cheia de amor 	C6	Vinil	1990
+64.418	Trilha de filme 	Vision quest	C6	Vinil	1985
+64.419	Aleta Adam	Rhythm of life 	C6	Vinil	1990
+64.420	Agnaldo Rayol 	Sempre te amarei 	C6	Vinil	
+64.421	Luciano Pavarotti nacional	O boly nigth	C6	Vinil	1976
+64.422	Glenn Meeiros e Double Trowbe	She aint worth it love don't live here amymore 	C6	Vinil	1990
+64.423	Saint - Prewx	Concerto para uma voz	C6	Vinil	1987
+64.424	Technotronic 	Technotronic 	C6	Vinil	1990
+64.425	Ferrante & Feicher 	Play the hit themes 	C6	Vinil	1973
+64.426	Selma Reis	Sombra um nosso olhar	C6	Vinil	1991
+64.427	Olivia Newton - John	Soul kiss 	C6	Vinil	1985
+64.428	Guilherme Arantes  	Calor 	C6	Vinil	1986
+64.429	Baden Powell & Paulo César Pinheiro 	Bden Powell e Paulo Cesar  Pinheiro 	C6	Vinil	1983
+64.430	Historias infantis	Chapeuzinho Verm./O rouxinol do imperador/O leão cantor 	C6	Vinil	1965
+64.431	Trilha de novela 	Lua cheia de amor 	C6	Vinil	1990
+64.432	Vários 	Viva a noite 	C6	Vinil	
+64.433	Trilha de novela 	Pantanal 	C6	Vinil	1990
+64.434	Blitz 	As aventuras da Blitz 	C6	Vinil	1982
+64.435	Mangabinha 	Forró do Mangabinha 	C7	Vinil	1978
+64.436	Ginga Pura	Ginga Pura 	C7	Vinil	1993
+64.437	Vários 	Explosão do anos 60 	C7	Vinil	1976
+64.438	Trilha de novela 	Salomé 	C7	Vinil	1991
+64.439	Bela Babai 	Gupsy love 	C7	Vinil	
+64.440	Carmen Carvalho 	Hits from Hollywood 	C7	Vinil	1966
+64.441	Carmen Carvalho 	Plays the hits 	C7	Vinil	1968
+64.442	Montovani and his orchestra 	Mantovani in concert 	C7	Vinil	1971
+64.443	George Melachrino e sua orquestra 	Fim de tarde em Lisboa 	C7	Vinil	
+64.444	Tina Charles 	Heart 'n' Soul	C7	Vinil	1978
+64.445	The style council 	Our favourit shop 	C7	Vinil	1985
+64.446	Prince & the revolution (trilha de filme)	Purpn Rain 	C7	Vinil	1984
+64.447	João Maria de Abreu 	Tangos 	C7	Vinil	1980
+64.448	Silvio Caldas 	O seresteiro	C7	Vinil	1969
+64.449	Maria Creuza 	Eu sei que vou te amar	C7	Vinil	1987
+64.450	Milionário e José Rico 	Escravo do amor 	C7	Vinil	1981
+64.451	Francisco José 	A volta do fabuloso Francisco José	C7	Vinil	
+64.452	Maria Creuza, Vinicius de Morais e Toquinho	Eu sei que vou te amar	C7	Vinil	1972
+64.453	Franisco Petronio e Dilermando Reis	Uma voz e um violão em serenata - vol 2	C7	Vinil	1963
+64.454	Dolores Duran 	Dolores Duran 	C7	Vinil	
+64.455	Uriah Heep 	Demons and wizards 	C7	Vinil	1973
+64.456	Vinicius de Moraes, Marilia Medalha e Toquinho	Como dizia o poeta 	C7	Vinil	1971
+64.457	Vários 	Uma noite no bataclan 	C7	Vinil	1975
+64.458	Maria Medalha e Vinicius de Moraes 	A canção e a voz de Maria M. na poesia de Vinicius de M.	C7	Vinil	1972
+64.459	Wilson Batista	Música popular brasilieira 	C7	Vinil	1978
+64.460	Composições do folclore brasileiro adaptadas	Acalantos brasileiros 	C7	Vinil	1978
+64.461	João de barro (Carlos Alberto Ferreira Braga)	Sério documento	C7	Vinil	1972
+64.462	Amélia Rodrigues 	Rara e inédita	C7	Vinil	1989
+64.463	Conjunto barroco de Hamburgo e Adalf	Concertos para trompete	C7	Vinil	1970
+64.464	Vários	Década explosiva	C7	Vinil	1975
+64.465	Vários	James Bond greatest hits 	C7	Vinil	1985
+64.466	Slade	Old new borrowed and blue 	C7	Vinil	1974
+64.467	Paul Muriat 	A grande orquestra de Poul Muriat n° 18	C7	Vinil	1974
+64.468	Angela Maria	Angela Maria	C7	Vinil	
+64.469	Orquestra da câmara inglesa regida por Colin Davis	Stravisky: cantata de missa	C7	Vinil	1973
+64.470	Weihnacht in wien 	Die wiener san gerk naben singenfiird christkind 	C7	Vinil	1975
+64.471	A patotinha 	Brincando de roda numa discotheque 	C7	Vinil	1978
+64.472	Trilha de novela 	Corpo a corpo	C7	Vinil	1984
+64.473	Os maragatos	As gauchadas do seu Amaranto 	C7	Vinil	1994
+64.474	Zé Bettio	A charanga do Zé 	C7	Vinil	1981
+64.475	Orquestra sinfônica de Londres e o coro e Colin Davis 	Handel o Messsias 	C7	Vinil	1971
+64.476	Dorival Caymi 	Dorival Caymi 	C7	Vinil	1972
+64.477	Fandango	Fandango	C7	Vinil	1975
+64.478	Titãs 	Tudo ao mesmo tempo agora 	C7	Vinil	
+64.479	Yes 	Yesterday 	C7	Vinil	1979
+64.480	Burt Bacharad 	Burt Bacharad	C7	Vinil	1971
+64.481	Kiss	Dressed to kill 	C7	Vinil	1975
+64.482	Adyel	I feel good 	C7	Vinil	
+64.483	Slave	Slave alive 	C7	Vinil	1972
+64.484	Vários	Isto é Hollywood vol. 2	C7	Vinil	1984
+64.485	Simphonica of London Solists and Choruses wyn Morris conductor 	Mahler: symphony of a Thousand part II	C7	Vinil	1973
+64.486	Manuel de Falla	Thee cornered  hat el amor erujo	C7	Vinil	1971
+64.487	John Carewe conduzendo Th London Synphony	Stravnky: l' histoire du soldat Milhaud: la ereation du monde	C7	Vinil	1972
+64.488	Henry Mancini	The sounds & voices of Henry Mancini 	C7	Vinil	
+64.489	Autor: Orestes Barbosa Interprete: Emílio Escobar	Grandes autores, grandres interpretes 	C7	Vinil	1978
+64.490	New York Philarmonic Leonard Bernstein 	Mahler: Symphony n°5 in csharp minor 	C7	Vinil	
+64.491	Orquestra Filarmônica de Berlim regente Herbert von Karajan 	Richard strauss sinfônia domestica	C7	Vinil	
+64.492	Miguel Brown 	Manpower 	C7	Vinil	1984
+64.493	The Dramatcs 	Anytime,anyplace 	C7	Vinil	1979
+64.494	Silvio Caldas 	As grandes interpretações de Silvio Caldas 	C7	Vinil	
+64.495	Trilha de novela 	Roda de fogo 	C7	Vinil	1986
+64.496	Trilha de novela 	Louco amor internacional 	C7	Vinil	1983
+64.497	Carl Douglas 	Kung fu fighter	C7	Vinil	1975
+64.498	Falco 	Falco 3	C7	Vinil	1985
+64.499	Shirley Jones 	Always in the mood 	C7 	Vinil	1987
+64.500	Vários	Sweet songs 	C7	Vinil	1987
+64.501	Ray Parker Jr. & Raydio 	A woman needs love 	C7	Vinil	1981
+64.502	Leopold Stokowski regendo a Orquestra Sinfônica de Londres	Rimsky- Korsakov & Cherazade 	C7	Vinil	1969
+64.503	Vários	Adega de alfana	C8	Vinil	1978
+64.509	Vários 	The virtuoso trumpet	C8	Vinil	1973
+64.505	Stanley Black regente The London Festival orchestra	Capriccio	C8	Vinil	1970
+64.506	Robert Sharples regendo London festival orchestra 	Tchaikovsky phase four 	C8	Vinil	1970
+65.507	Carlos Pauta regendo The new Philharmonia Orchestra 	A wagner festival 	C8	Vinil	1970
+64.508	Moacyr Franco 	Contrastes 	C8	Vinil	
+64.509	Silvio Caldas 	O seresteiro 	C8	Vinil	
+64.510	Trilha de filme 	Camelot 	C8	Vinil	
+64.511	New philarmonic i Zubra Melta 	Richard Wagner 	C8	Vinil	1983
+64.512	Montovani e sua orquestra	Itália Mia 	C8	Vinil	
+64.513	Charles Munch regendo a new phlharmonia orquestra 	Bezet Carmen & L' arlesunne suites	C8	Vinil	1970
+64.514	Conjunto romântico Guadalajara 	Perfídia 	C8	Vinil	
+64.515	Raymond Lefevre e Poul Mouriat 	Maurice Chevalier 	C8	Vinil	
+64.516	Ismael Silva 	Música popular brasileira n° 12 	C8	Vinil	1970
+64.517	Jorge Ben	Música popular brasileir n° 8	C8	Vinil	1970
+64.518	Alberto Ribeiro e João de Barro 	Música popular brasielira n° 9	C8	Vinil	1970
+64.519	Johny Mathis	Love story 	C8	Vinil	1971
+64.520	The Bhaktivedanta Book Trust	Hare krishna festival	C8	Vinil	
+64.521	Johny Mathis 	Romeo and Juliet 	C8	Vinil	1977
+64.522	Angela Maria 	Boleros 	C8	Vinil	1971
+64.523	Beth Carvalho 	Alma do Brasil 	C8	Vinil	
+64.524	Rick Astley 	Whenever you need somebody 	C8	Vinil	1988
+65.525	Steve Hackett	Voyaje of the acolyte 	C8	Vinil	1987
+64.526	Tina Turner 	Private Dance 	C8	Vinil	1976
+64..527	The Guess Who 	Artificial paradise 	C8	Vinil	1984
+64.528	Vários 	A música maravilhosa do cinema vol. 2	C8	Vinil	1973
+64.529	Titãs 	O besq bon 	C8	Vinil	
+64.530	Ataulfo Alves 	Autografo de sucesso (série) 	C8	Vinil	1971
+64.531	Gal Costa 	Índia 	C8	Vinil	1973
+64.532	Cat Stevens 	Greatest hits 	C8	Vinil	1975
+64.533	Marcelo Candinale  e sua orquesttra de dança 	Stravaganza itabana vol. 3	C8	Vinil	1963
+64.534	Jermanni Jackson 	Let' s get seriows 	C8	Vinil	1980
+64.535	Vários	Soul ballads 	C8	Vinil	1987
+64.536	Earth, wind & fire 	I am 	C8	Vinil	1979
+64.537	A - ha 	On tour in Brazil 	C8	Vinil	1989
+64.538	Trilha de novela 	Barriga de aluguel 	C8	Vinil	1990
+64.539	Herman Krebers, violino e orquestra de camera de Amsterdam	Música barroca romântica 	C8	Vinil	1970
+64.540	Guenther Brausinger 	Magnificent organ	C8	Vinil	
+64.541	Zamfer 	Romance 	C8	Vinil	1983
+64.542	Orquestra Filarmônica de Berlim e Herbert von Karajan 	Dvorak 	C8	Vinil	1959
+64.543	Frank Chacksfild e sua orquestra 	Crepúsculo ( Mediterranean Moonlight) 	C8	Vinil	
+64.544	Saint- Saens Sarasate 	German orchestra                             	C8	Vinil	1972
+64.545	Leinsdora and Munch/Boston Symphony	Beethoven	C8	Vinil	1970
+64.546	Stravinsky: Petrushka ci	zuvin mehtados	C8	Vinil	1947
+64.547	Julius Baker, Flute Jelka Stanic, Violin Rudolf k lepac, Basson Anton Ganoci and Ferdo Paulinek, Mandolins	Historical Anthologi 	C8	Vinil	1973
+64.548	Orquestra filarmonica de Berlim	Beethoven Wagner	C8	Vinil	1973
+	Hebert ian Karajan 	Brahms	C8	Vinil	1972
+64.549	Paulinho da viola 	Nervos de aço - Paulinho da Viola 	C8	Vinil	1973
+64.550	Altamiro Carrilho	Antólogia da flauta	C8	Vinil	1977
+64.551	Tito Mondi - Quem é da noite 	Tito Mondi - Quem é da noite 	C8	Vinil	1987
+64.552	The Symphony of The Air and Chorus Bidu sayao, soprano	Villa Lobos florest of the mazon 	C8	Vinil	
+64.553	Paulo Sergio	Paulo Sérgio 	C8	Vinil	
+64.554	Vários	Super funky 	C8	Vinil	1980
+64.555	In feel effect mantronix	Mantronix	C8	Vinil	1988
+64.556	Street Called Desire (Réne Angela	Riniana Angela 	C8	Vinil	1985
+64.557	The s.o.s band 	The finest	C8	Vinil	1986
+64.558	Thelma Jones 	Thelma Jones 	C8	Vinil	1976
+64.559	Carlos Poyares 	Revendo co a flauta os bons tempos do chorinho	C8	Vinil	1977
+64.560	Caulry Peixoto 	Os maiores sucessos de Caulry Peixoto	C8	Vinil	1969
+64.561	Fafá de Belém 	Aprendizes da esperança 	C8	Vinil	1985
+64.562	Vinicius de Moraes	Autografos de sucesso	C8	Vinil	1974
+64.563	Antonio Carlos Jobim	Matita perê	C8	Vinil	1973
+64.564	Titãs 	Titãs	C8	Vinil	1988
+64.565	Ismael Silva 	Música popular 	C8	Vinil	1977
+64.566	MPB 4	Palhaços e reis 	C8	Vinil	1974
+64.567	Júlio Iglesias 	Minhas canções preferidas 	C8	Vinil	1981
+64.568	Viagem Taiguara 	Viagem Taiguara 	C8	Vinil	1970
+64.569	Produzido pela colgens record 	More of the monkees 	C8	Vinil	1967
+64.570	Ochestra  Directed by Frank Hunther e Ralph Carmichael	Roger Wilian mr. piano 	C8	Vinil	
+64.571	Jacques Keiin/ Ezequiel Moreira 	Zequinha de Abreu	C8	Vinil	
+64.572	Abel Ferreir sax e clarineta	Brasil, sax e clarineta 	C8	Vinil	1976
+64.573	Antena 1 love music 	Antena 1 love music 	C8	Vinil	1982
+64.574	International 	Soul grand pix	C8	Vinil	1977
+64.575	Bob a Bella	Bob a Belea 	C8	Vinil	1650
+64.576	Bloom the brothers johmon 	Bloom the brothers johmon 	C8	Vinil	1978
+64.577	Wagner music group 	Lakeside outrageous 	C8	Vinil	1985
+64.578	Curtis Anthony	Rockwwe samelodys watching me 	C8	Vinil	1984
+64.579	Biee curtis e Gerry Thomos 	Hot box fat back 	C8	Vinil	
+64.580	Montown motel 4 	Montown motel 4 	C8	Vinil	1980
+64.581	Let's roller 	Let's roller 	C8	Vinil	1978
+64.582	Equipe black chic band 	Equipe black chic band 	C8	Vinil	1980
+64.583	Super hits 	Top 12 from usa vol.6	C8	Vinil	
+64.584	Casa blanca 	Starpoint 	C8	Vinil	1974
+64.585	Liminha & Pena Shmiat  remixado por Ivoi Campos 	Transrimix	C8	Vinil	1980
+64.586	Equipe cameoblack 	The legendary "zing" album feat	C8	Vinil	1986
+64.587	Original hits 	Disco mágico 	C8	Vinil	
+64.586	America a frequencia do sucesso vol. 4  	America a frequencia do sucesso vol. 4  	C8	Vinil	1980
+64.589	Super quente 	SQ super quente 	C9	Vinil	1987
+64.590	Venenus disco club 	Venenus disco club 	C9	Vinil	1983
+64.591	Jhohnny Scotton/ Sweet Chals Bovy B./ James B. 	Discoteca especial vol.3 	C9	Vinil	1976
+64.592	Trilha sonora internacional 	Os gigantes 	C9	Vinil	1979
+	Trilha sonora baila comigo 	Internacional	C9	Vinil	1981
+64.593	Internacional 	Plumas & Paetes 	C9	Vinil	1980
+64.594	Trilha sonora internacional	Locomotivas	C9	Vinil	1977
+64.595	Trilha sonora original 	Plumas & Paetes	C9	Vinil	1980
+64.596	Internacional 	Sem lenço, sem documento 	C9	Vinil	1977
+64.597	Trilha sonora internacional	Estupido cupido 	C9	Vinil	1976
+64.598	Trilha sonora internacional	Marron glace 	C9	Vinil	1979
+64.599	Trilha sonora internacional	Pecado capital 	C9	Vinil	1976
+64.600	Elton John 	Elton John 	C9	Vinil	1985
+64.601	Miguel Plopschi 	Roupa Nova	C9	Vinil	1977
+64.602	Troriacas do Carmo	Carlos do Carmo 	C9	Vinil	1972
+64.603	Os grandes sucesssos de Cauby Peixoto 	Os grandes sucesssos de Cauby Peixoto 	C9	Vinil	1972
+64. 604	Zeze de Camargo e Luciano 	Zeze de Camargo e Luciano 	C9	Vinil	1993
+64.605	Leandro e Leonardo 	Leandro e Leonardo 	C9	Vinil	1991
+64.606	Mazola	Essa mulher Elis Regina 	C9	Vinil	1979
+64.607	Jim croce songs vol 03	Jim croce songs vol 03	C9	Vinil	1979
+64.608	25 anos de mambo	25 anos de mambo	C9	Vinil	1992
+64.609	Brasilian band 	Tropical brasilian band 	C9	Vinil	
+64.610	Reginaldo Rossi	Zangado como todo coração 	C9	Vinil	1986
+64.611	Vinicius de Moraes e Toquinho e Amigo 	Vinicius de Moraes e Toquinho e Amigo 	C9	Vinil	1974
+64.612	Chinese Wall 	Philip Bailey 	C9	Vinil	1984
+64.613	Temas da novela 	Mulheres de areia 	C9	Vinil	1973
+64.614	Grandes Nomes da musica brasileira 	Grandes Nomes da musica brasileira	C9	Vinil	
+64.116	Dance com Xavier e sua Orquestra	Dance com Xavier e sua Orquestra	C9	Vinil	
+64.618	Mario Zan sua bandinha 	Pula a fogueirra 	C9	Vinil	
+64.619	Trilha soronora novela 	O bem amado 	C9	Vinil	1973
+64.620	Folhas	Folhas	C9	Vinil	1977
+64.621	The fevers 	The fevers	C9	Vinil	1971
+64.622	Eric Parmen	The best of Eric Parmen 	C9	Vinil	1988
+64.623	Talk Talk 	Spirit oh e den 	C9	Vinil	1988
+64.624	 Vários 	Arrebentando II	C9	Vinil	1986
+64.625	Mantovani 	Melodias inesqueciveis 	C9	Vinil	1972
+64.626	Matovani e sua orquestra com Rawicz e Landawer 	Alenda da montanha de cristal 	C9	Vinil	1971
+64.627	Beneditto Marcello	Quatro concertos Les musiciens de Paris 	C9	Vinil	1971
+64.628	Andre Kostelanetz and his orchestra 	Grupsy passion 	C9	Vinil	
+64.629	Milan Munchinger 	Johann Sebastian Bach	C9	Vinil	
+64.630	Roberto Leal 	Roberto Leal	C9	Vinil	1976
+64.631	Leopold Stokowsky regendo a Orquestra S. Londres	Mussorgsky, Stokowsky e Stravinsky, 	C9	Vinil	1970
+64.632	Rita Lee 	Rita Lee 	C9	Vinil	1979
+	02020202020202020202	Oja awarke 	C9	Vinil	1978
+64.634	Eumir Deodato 	Knights of fantasy 	C9	Vinil	1979
+64.635	Ray Parker Jr.	After dark 	C9	Vinil	1987
+64.636	Vários 	Jovem pan 2	C9	Vinil	1979
+64.637	TTF (Today Tomorrow Fover)	TTF (Today Tomorrow Fover)	C9	Vinil	1980
+64.638	Stanley Black regendo a the London Festival Orchestra 	France	C9	Vinil	1969
+	Aerosmith	Dream on	C9	Vinil	1973
+64.640	The Beathes 	Revolver	C9	Vinil	1966
+64.641	Hubert Wolf 	Hubert Wolf mitseiner harpezither 	C9	Vinil	1980
+64.642	Fischer Chore Orquestra Hans Bertron 	Mil vozes  cantam sucessos Mundiais 	C9	Vinil	1973
+64.643	Trio Cristal 	As mais lindas guaranias 	C9	Vinil	1967
+64.644	Simone	Face a face	C9	Vinil	1977
+64.645	Elizeth Cardoso 	Disco de ouro 	C9	Vinil	1974
+64.646	Orquestra Bach de Munique 	Johan Sebastian Bach 	C9	Vinil	1971
+64.647	Maria Creuza 	Eu disse adeus	C9	Vinil	1973
+64.648	Legião urbana 	Legião urbana 	C9	Vinil	1984
+64.649	Ritchie 	E a vida continua 	C9	Vinil	1984
+64.650	Barry White	A arte de Barry White	C9	Vinil	1988
+64.651	Táxi 	Táxi	C9	Vinil	1979
+64.652	Sulvester	Stars 	C9	Vinil	1979
+64.653	Vários 	Acontece 	C9	Vinil	1979
+64.654	Mario Lanza	Sings Caruso favorites	C9	Vinil	
+64.655	The Waltz Festival orchestra Hans von Kreisler	Valsas inesqueciveis vol. IV	C9	Vinil	1971
+64.656	The Waltz Festival orchestra Hans von Kreisler 	Valsa inesqueciveis vol. III	C9	Vinil	1971
+64.657	The leebanoffd strings & orchestra 	Besame mucho 	C9	Vinil	1975
+64.658	Magda Tagliaferro	Magda Tagliaferro	C9	Vinil	1979
+64.659	Orquestra filarmônica de Viena e Karl Bohn 	Wolfgang Amadeus Mozart 	C9	Vinil	1977
+64.660	Trilha de novela 	Felicidade 	C9	Vinil	1992
+64.661	Trilha de novela	Fiesta vol 2	C10	Vinil	1989
+64.662	Ferrante & Feicher 	The wold's favorite melodies 	C10	Vinil	1976
+64.663	Vários 	Black House - Disco dance 	C10	Vinil	
+64.664	Vários 	Super Jovem	C10	Vinil	1983
+64.665	Ritchie	Tranças 	C10	Vinil	1986
+64.666	Louis Clark conducting  the Royal philarmonic Orch.	Hooked on classics 	C10	Vinil	1982
+64.667	Michael Zager Band 	Michael Zager Band 	C10	Vinil	1978
+64.668	Banana Power	Banana Power	C10	Vinil	1978
+64.669	Bernard Haitink Orquestra do concertgeboww de Amsterdam 	Gustav Mahler 	C10	Vinil	1972
+64.670	Quarteto Amadeus 	Ludwing von Beethoven 	C10	Vinil	1974
+64.671	Pholhas 	Forever 	C10	Vinil	
+64.672	David Mackersie and his orchestra 	Magic Lana 	C10	Vinil	1982
+64.673	Zapp 	Zapp II	C10	Vinil	1987
+64.674	Vários 	Só mix romance 	C10	Vinil	1976
+64.675	B.T. Express 	Energy to erern 	C10	Vinil	1986
+64.676	Elizeth Cardoso 	Luz e explendor 	C10	Vinil	1988
+64.677	Tracy Chapman 	Tracy Chapman 	C10	Vinil	1988
+64.678	Roulette 	Laban 	C10	Vinil	1993
+64.679	Roberta Miranda 	Roberta Miranda 	C10	Vinil	1973
+64.680	Jean Claude Veilham 	Florilégio da flauta doce 	C10	Vinil	1974
+64.681	Black Salbath 	Salbath boody Salbath 	C10	Vinil	1993
+64.682	Jorge Benjor e Tim Maia 	Dançando a noite inteira 	C10	Vinil	1968
+64.683	Agnaldo Rayol	Quero lhe dizer cantando 	C10	Vinil	1973
+64.684	Deodato 	Prelude 	C10	Vinil	1972
+64.685	Trilhas de filme 	Grandes temas de filme 	C10	Vinil	1972
+64.686	Oslo Philarmonic orchestra 	Grego biggest hist	C10	Vinil	
+64.687	Cramen Carvalho 	Cocktails com Carvalho 	C10	Vinil	
+64.688	André Kostelanetz	As cordas mágicas de André Kostelanetz 	C10	Vinil	1983
+	Madonna	Madonna	C10	Vinil	1973
+	The new philarmonia regido por Daniel Barenbom	Bach; magnificat Buckener: te dun 	C10	Vinil	
+64.689	Mario Lamza 	For rhe first time 	C10	Vinil	1972
+64.690	Vários ( Orquestra ) 	German ber drinking song	C10	Vinil	1969
+64.691	varios	German ber drinking song		Vinil	
+64.692	Trilha de filme 	Doutor Jevago	C10	Vinil	1966
+64.693	Flipper Hits	Flipper Hits	C10	Vinil	1983
+64.694	avec Monsieur Limã	avec Monsieur Limã	C10	Vinil	1979
+64.695	RSO Special 2	RSO Special 2	C10	Vinil	1979
+64.696	Huck Brown And The Soul Searckers	Huck Brown And The Soul Searckers	C10	Vinil	1980
+64.697	Roller Speed Center	Roller Speed Center	C10	Vinil	1983
+64.698	Disco "84"	Disco '84"	C10	Vinil	1984
+64.698	Shirley e Company  Diversos	Shirley e Company Diversos	C10	Vinil	1975
+64.699	New York  City Discotrique 7	New York City Discotrique 7	C10	Vinil	1979
+64.700	Disco "84"	Disco "84"	C10	Vinil	1984
+64.701			C10	Vinil	
+64.702			C10	Vinil	
+64.703	Tema da Novela Selva de Pedra	tem moare	C10	Vinil	1986
+64.704	Banana Power  Discotrique 	Banana Power Discotrique	C10	Vinil	1975
+64.705	Especial Para Programadores e Disc Jockeys	Essa é para tocar na radio IX	C10	Vinil	1981
+64.706	Flash 	the moare	C10	Vinil	1986
+64.707	Game Hits	Game Hits	C10	Vinil	
+64.708	Vamos nessa Varios 	Vamos nessa	C10	Vinil	1983
+64.709	Into The Dragon Bomb the peass	Into The Dragon Bomb the peass	C10	Vinil	
+64.710	Mega Hits 2	Mega Hits 2	C10	Vinil	1988
+64.711	Mega Hits  	Mega hits   	C10	Vinil	1987
+64.712	Hit Parade	HIt Parade	C10	Vinil	1981
+64.713	Funk, Rock Reggae, coutry, Other terengs		C10	Vinil	1981
+64.714	Linda Lifford	Let me Beffuor 	C10	Vinil	1979
+64.715	Galbery	Disco Inverno	C10	Vinil	
+64.716	Internacional	Glace Jones, Seare to theryterm	C10	Vinil	1985
+64.717	Sua Paz Mundial vol 5	Sua paz mundial vol 5	C10	Vinil	
+64.718	Disco Blood parte II	Disco Blood parte II	C10	Vinil	1977
+	the Vamps	The Vamps	C10	Vinil	
+64.719	Dirty Mind/Prince	Prince	C10	Vinil	
+64.720	Climbin Higerer	Climbin Higerer	C10	Vinil	1980
+64.721	7 ther Wonder	7 ther Wonder	C10	Vinil	
+64.722	Mercury Insude Lookin Out Junior	Mercury Insude Lookin Out Junior	C10	Vinil	1983
+64.723	John Blakmorore	John Blakmorore	C10	Vinil	1973
+64.724	Hit Parade II	Hit Parade II	C10	Vinil	1981
+64.725	Funk explosion	Funk EXposição	C10	Vinil	1983
+64.726	New Edition	New Edition 	C10	Vinil	1984
+64.727	Top Disco Funk 81	Top Disco Funk 81	C10	Vinil	1980
+64.728	Disco magic	Disco Magic	C10	Vinil	
+64.729	Sucessos do Brasil inteiro	Sucessoas No Brasil	C10	Vinil	1977
+64.730	Sancha	Maria Magda Lima	C10	Vinil	1985
+64.731	Surgival of the Freshist	The Borgies Boy	C10	Vinil	
+64.732	Os grandes Sucessoas de Julia	Os grandes Sucessoas de Julia	C10	Vinil	1981
+64.733	The Beat Masters		C10	Vinil	1989
+64.734	Vinicius Discos Clube 10 anos	Vinicius Discos Clube 10 anos	C10	Vinil	1986
+64.735	Todos os Sucessoas de Bolg Solo	Todos os Sucessoas de Bolg Solo	C10	Vinil	1973
+64.736	Disco revelation 	Disco Evolução 	C10	Vinil	
+64.737	A Noviça Rebelde	A Noviça Rebelde	C10	Vinil	1965
+64.738	A Malia Rodrigues Obsessão	A Malia Rodrigues Obsessão	C10	Vinil	1990
+64.739	Lawrence Welk	Lawrence Welk	C10	Vinil	1968
+64.740	ohta San Mets	Herb  OhtaSong For Anna	C10	Vinil	1974
+64.741	The News Philarmonia Orquestra	Bouliz Rege Debrussy	C10	Vinil	1973
+64.742	Violinos Romanticos 	Violinos Romanticos	C10	Vinil	
+64.743	Batista junior	Alma Negra	C10	Vinil	1988
+64.744	Boas Palavras	Boas Palavras	C10	Vinil	1987
+64.745	Jonhanmes Brahas	Jonhanmes Brahas	C10	Vinil	1973
+64.746	The Big Band Sound of the thirts enoch and the ligert  brigade	The Big Band Sound of the thirts enoch and the ligert  brigade	C10	Vinil	
+64.747	Italia Romantic a livro Dell amor 	Italia Romantica	C10	Vinil	
+64.748	Mario Lanza	Le pui Belle canzoni de Mario Lanza	C10	Vinil	1966
+64.749	Orqestra Romantica de Cuba	Romanticos de Cuba Internacional Vol II	C10	Vinil	
+64.750	Trilha de Novela	Coração Alado Internacional 	C10	Vinil	1980
+64.751	Orquestra Sinfonica da Radio de Baden- baden	Brahms	C11	Vinil	1983
+64.752	Silvia Telles 	Edição Historica vol 7	C11	Vinil	1974
+64.753	Sr Eugene Goossens Regendo a Orquestra Sinfonica de Londres	Villa Lobos	C11	Vinil	1972
+64.754	Vadico	Evocação III	C11	Vinil	
+64.755	Varios 	Grandes interpretes da nossa musica 	C11	Vinil	1981
+64.756	Darye Hall e John Oates	Live At The Apollo With David Ruffen e Eddie Kendrick	C11	Vinil	1985
+64.757	Orquestra Sinfonica de Bamberg, Regente Jonel Perlea	Haydn	C11	Vinil	1983
+64.758	Lipps, Inc	Pucker up	C11	Vinil	1980
+64.759	Exposé	What You Don't Know	C11	Vinil	1989
+64.760	Exposé	What You Don't Know	C11	Vinil	1989
+64.761	Prince	Prince	C11	Vinil	1980
+64.762	Barbra Streisand	Os Grandes Interpretações	C11	Vinil	1971
+64.763	Kylie Minogue	Kylie	C11	Vinil	1988
+64.764	Starship	Mix Starship	C11	Vinil	1986
+64.765	The Feveres	The Feveres	C11	Vinil	1979
+64.766	Nelson Gonçalves	Nelson Gonçalves	C11	Vinil	1979
+64.767	Trilha de Novela 	Danan Days Internacional 	C11	Vinil	1978
+64.768	Orquestra Filarmônica de Londres Regendo a Antal Dorato	Valsas de Strauss	C11	Vinil	
+64.769	Maranhão	Gabriela	C11	Vinil	1974
+64.770	Gretchen	Lonely	C11	Vinil	1982
+64.771	Leandro e Leonardo	Leandro e Leonardo	C11	Vinil	1990
+64.772	The Great Dietrich Sings In German With The Orchertra of Burt Bacharach	Wiedersehen mit Marlene	C11	Vinil	
+64.773	Kaoma	Worldbeat	C11	Vinil	1989
+64.774	Varios 	Dynamite	C11	Vinil	1976
+64.775	Trilha de Filme 	The Mighty	C11	Vinil	1989
+64.776	Trilha de Novela	Rainha da Sucata	C11	Vinil	1990
+64.777	Varios 	Lambahia	C11	Vinil	1989
+64.778	Trilha de Novela	Espelho Mágico e coquetel de amor	C11	Vinil	1977
+64.779	Trilha de Novela	O sexo dos Anjos	C11	Vinil	1989
+64.780	Varios 	101 Cordas	C11	Vinil	1986
+64.781	Phil Collins	No Jacket Requi	C11	Vinil	1985
+64.782	Orosby Stills Nash e Woung	Red	C11	Vinil	
+64.783	Varios 	Total Sucesso	C11	Vinil	1988
+64.784	Varios 	Os Grandes  Sucessos nacionais do Scala	C11	Vinil	1988
+64.785	Retrato De Sinatra	Retrato de Sinatra	C11	Vinil	1980
+64.786	Trilha de Novela	Chispita	C11	Vinil	1984
+64.787	Angelica	Angelica	C11	Vinil	1991
+64.788	Frank Chacksfield and his Orchestra	Chacksfield Plays the Beatles song book	C11	Vinil	1971
+64.789	Titãs	Titanomaguia	C11	Vinil	1993
+64.790	Orquestra e côro carro irssell	Historias e canções 	C11	Vinil	
+64.791	Elis Regina e Jair Rodrigues 	Na bossa	C11	Vinil	1965?
+64.792	Clara Haskel e Arthur Grumiause	Mozart	C11	Vinil	
+64.793	Dorival Caymmi	As Musicas de Dorival Caymmi 	C11	Vinil	1978
+64.794	Guilherma Arantes	Amanhã	C11	Vinil	1988
+64.795	Trilha de Filme 	Chitty Chitty Bang bang	C11	Vinil	1968
+64.796	João Nogueira	Os Grandes sucessos de João Nogueira	C11	Vinil	1981
+64.797	Robert  Stolz	Frohliche weihnachten mit Robert Stolz	C11	Vinil	
+64.798	Zé Rodrix	Soy Latino Americano	C11	Vinil	1976
+64.799	Varios 	D.J´s Promo mix 10	C11	Vinil	1990
+64.800	Varios 	Só Amor	C11	Vinil	1988
+64.801	Maria Creuza	Pura Magia	C11	Vinil	1987
+64.802	Raimundo	raimundo	C11	Vinil	1994
+64.803	Varios 	Super Parada	C11	Vinil	1972
+64.804	Luciano Pavanotti	Canções Napolitanas 	C11	Vinil	1979
+64.805	Maria Bethânia	Maria Bethânia	C11	Vinil	1969
+64.806	Elis Regina   	Elis Especial	C11	Vinil	1968
+64.807	Jõao de Barro e Allberto Ribeiro	Nova Historia da Musica popular brasileiro	C11	Vinil	
+64.808	Johnny Rivers	The Best  of Johnny Riveres	C11	Vinil	1982
+64.809	The Modern JAz z Quartet e artista convidado laurindo almeida	The Modern Jazz Quartet	C11	Vinil	
+64.810	Menudo 	Menudo mania	C11	Vinil	1984
+64.811	Emilio escobar	Ontem ao Luar	C11	Vinil	
+64.812	Orquestra e côro carroussell	o canto das crianças n° 1 2 3 cantingas de roda	C11	Vinil	
+64.813	Arlindo Bettio	o sanfaneiro mais alegre do Brasil vol III	C11	Vinil	1991
+64.814	Clara Nunes	Alvorecer	C11	Vinil	1974
+64.815	Carmen Carvalharo	Finian's Rainbow star	C11	Vinil	1970
+64.816	Charles Munch e New Philharmonia Archestra	Respghi Fountans of Romi ppines of Rome 	C11	Vinil	1969
+64.817	Demônios da garôa	Demônios da Garoa	C12	Vinil	1970
+64.818	Dorival Caymmi	Musica popular Brasileira	C12	Vinil	1970
+64.819	Mantovani	Mr. Music	C12	Vinil	1967
+64.820	Varios 	Uma noite em Nápolis	C12	Vinil	
+64.821	Amália Rodrigues	Os Grandes Sucessoas de Amalia Rodrigues	C12	Vinil	1987
+64.822	Fritz Winderlich 	Eine  unvergessune stimme	C12	Vinil	
+64.823	Varios 	Alma da Espanha vol 1 (101 cordas)	C12	Vinil	1978
+64.824	Varios 	Fogo Cigano Amor e Romance	C12	Vinil	1973
+64.825	A cor do som	Gosto de prazer	C12	Vinil	1987
+64.826	Lulu Santos	Honolulu	C12	Vinil	1990
+64.827	Gilberto Gil	Umbanda um	C12	Vinil	1982
+64.828	Peaches e herb	2 Hot	C12	Vinil	1978
+64.829	a Fast of honey sun	Boogie oogie oogie sun is Here	C12	Vinil	1978
+64.830	The Black	Flying start Happy	C12	Vinil	1981
+64.831	Surface	Happy	C12	Vinil	1981
+64.832	Change	Mirandes	C12	Vinil	1981
+64.833	UB-40	Rat in The Kitchen	C12	Vinil	1986
+64.834	Carioca Swings The delphin jr Orchertra Plays	Dance dance Dance	C12	Vinil	
+64.835	Robertinho de Recife	Satisfação	C12	Vinil	1981
+64.836	Werner Muller And his Orchestra 	Echoes of Italy	C12	Vinil	1970
+64.837	Werner Muller and and  his Orquestra	gypsy	C12	Vinil	1971
+64.838	leopold stokowski regendo a the new philharmonia orquestra	Belioz: symphone fantastique	C12	Vinil	1970
+64.839	Stanley Black and the London festival Orchestra	Espanha vol 2	C12	Vinil	1971
+64.840	Stanley Black Regendo a London Festival Orchestra	Danças Espetaculares para orquestra	C12	Vinil	1971
+64.841	Ronnie Aldrich and historico pianos with the London Festival Orchestra	Two Pianos Today	C12	Vinil	1968
+64.842	Mario Zan Sua Bandinha e coro	Pula a Fogueira	C12	Vinil	1973
+64.843	Historico Infantis	Chapeuzinho vermelho: o rouxinol do Imperador e o Leao cantor	C12	Vinil	1965
+64.843	Francisco Canaro e sua Orquestra Tipica	Adios Muchachos	C12	Vinil	1971
+64.844	The LLebanoff Strings e Orchestra	Besame Mucho	C12	Vinil	1975
+64.845	Varios 	Portugal com amor	C12	Vinil	1970
+64.846	Mantovani and his Orchestra 	Latin Rendezvous	C12	Vinil	1990
+64.847	Varios 	 O mellhor nacional de novelas	C12	Vinil	1990
+64.848	Trilha de novelas	Pai Heroi Internacional	C12	Vinil	1979
+64.849	Trilha de Novela	Anjo internacional 	C12	Vinil	1976
+64.850	Trilha de novela	Frita	C12	Vinil	1989
+64.851	Elizeth Cardoso, Ciro Monteiro com o Conjunto Regional caçulinha	A bossa eterna (Bossaudade)	C12	Vinil	
+64.852	Sinhô 	Nova Historia da Musica Popular Brasileiro	C12	Vinil	1977
+64.853	As Melindrosas	Disco Baby	C12	Vinil	1978
+64.854	Bernard Wright	Nard	C12	Vinil	1981
+64.855	The B.B e Q Band	All Night long	C12	Vinil	1982
+64.856	Whodini	Whodini	C12	Vinil	1988
+64.857	Randy Brown	Welcome to my roon	C12	Vinil	
+64.858	Varios 	Funk Now	C12	Vinil	1982
+64.859	KC the  sunshine Band	All in a night's work	C12	Vinil	1982
+64.860	Pepeu Gomes	Pepeu Gomes	C12	Vinil	1981
+64.861	Alexandre O' neal	Hearsay	          C12	Vinil	1987
+64.862	Varios 	Discoteca Hipopo tamus vol 4	          C12	Vinil	1977
+64.863	Rufris	Party' til you' re Broke	          C12	Vinil	1981
+64.864	Ray Conniff	Exclusivamente para amigos	          C12	Vinil	
+64.865	Neneh Cherry	Raw like Suslu	          C12	Vinil	1989
+64.866	Varios 	Videos Hits Vol II	          C12	Vinil	1983
+64.867	Tina Charles	Dance Little lady	          C12	Vinil	1977
+64.868	Varios 	Retorna Volume II (14 sucessos inesqueciveis da Musica Romantica Italiana	          C12	Vinil	1982
+64.869	Styx	Coverstone	          C12	Vinil	1979
+64.870	Johnny Mathis	The furts   time ever (i saw you face)		Vinil	1972
+64.871	Sarita montiel	La Violetera	           C12	Vinil	
+64.872	Klaus Tennstidt regendo a Orquestra Filarmônica de Londres 	Mahler Symphony n°1	           C12	Vinil	1978
+64.873	Gravação da Recepção dos Prrincipes Herdeiros do Japão No Estadio Municipal de Pacaembu, Realizada pela colonia japonesa	Momentos de Emoções Irresqueciveis	           C12	Vinil	1967
+64.874	Orquestra Filarmõnica de Berlim Regida por Hebert von Kargian	A magia de Karajan	           C12	Vinil	
+64.875	Ken Wilson Bill Green	Orchids in the Moonligth	           C12	Vinil	
+64.876	Simone	Desejos	           C12	Vinil	1984
+64.877	Varios 	Rock in Rio	           C12	Vinil	1984
+64.878	Varios 	Hippotarnus: Funk, Rock, Reggae e other things	           C12	Vinil	1980
+64.879	Simone	Corpo e alma	           C12	Vinil	1982
+64.880	Simone	Amar	           C12	Vinil	
+64.881	Simone	Sedução	           C12	Vinil	1988
+64.882	Astor Piazzolla e seu Conjunto	Musica Popular contemporanea de la cidade de Buenos Aires 	           C12	Vinil	1972
+64.883	Jean Pierre Rampal	Fascination´rampal	           C12	Vinil	1985
+64.884	Belly vaughn e seu Orquestra 	Natal Dourado 	           C12	Vinil	
+64.885	The Hungarian Gypsy Orchestra 	Zizani Ballet	           C12	Vinil	1972
+64.886	Clebanoff e sua orquestra	Stringe afare in spain	           C12	Vinil	
+64.887	Mantovani e sua Orquestra 	Montavani	           C12	Vinil	1970
+64.888	Paul Maureat	A Grande Orquestra de Paul Mauriat n°15 	           C12	Vinil	
+64.889	Rosa maria	Rosa maria	           C12	Vinil	1989
+64.890	Emilio Santiago	Aquarela Brasileiro	           C12	Vinil	1988
+64.891	Agostinho dos Santos                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              	Agostinho dos Santos	           C12	Vinil	1977
+64.892	 Gal costa	galtropical	           C12	Vinil	1979
+64.893	Maria Creuza Vinicius de Morais e Toquinho	o Grande encontro de Maria Creuza Vinicoius de Mporais e Toquinho 	           P13	Vinil	1979
+64.894	Maria Bethânia	Drama 3 ° ato: luz da Noite 	           P13	Vinil	
+64.895	Maria Creuza  	Sessão Nostagia 	           P13	Vinil	1974
+64.896	Chaka Khan	I feel For You	           P13	Vinil	1984
+64.897	Kansas	Two for the show	           P13	Vinil	1978
+64.898	Varios 	5 anos de femusa: o festival Gaucho de Musica Popular Cristã	           P13	Vinil	
+64.899	Orlando silva Francisco alves, Altemar Dutra,Carlos galhardo	In memorian: 16 Grandes sucessos dos inesqueciveis	           P13	Vinil	1986
+64.900	Carlos Gardel	O rouxinol dos pampas	           P13	Vinil	
+64.901	Gregorio barros	Nossos melhores Boleros 	           P13	Vinil	
+64.902	 Luiz Bordon	Tangos para Você	           P13	Vinil	
+64.903	Claudio Villa	Claudio Villa canta la sua Roma	           P13	Vinil	1966
+64.904	Luiz Gonzaga	Prêmio Shell para a musica Brasileira 	           P13	Vinil	1984
+64.905	Rosana	Doce Pecado 	           P13	Vinil	1990
+64.906	Varios 	A musica maravilhosa do cinema vol 2	           P13	Vinil	1978
+64.907	Elizabeth cardoso	Preciso aprender a ser só	           P13	Vinil	
+64.908	Trilha de Novela	os gigantes 	           P13	Vinil	1979
+64.909	Elton john	Rock of the  westies	           P13	Vinil	
+64.910	peppino de capri	Peppino de capri especial	           P13	Vinil	
+64.911	Stanley Black	Noites tropicais	           P13	Vinil	
+64.912	Johnny Mathis	i'm Coming home	           P13	Vinil	1974
+64.913	Astor Piazzolla grande orchestra D'archi	Persecuta	           P13	Vinil	
+64.914	Clemilda	em tenção de você	           P13	Vinil	1977
+64.915	Ivan Lins 	Ivan Lins ao vivo	           P13	Vinil	1991
+64.916	Paquitas	Paquitas	           P13	Vinil	1989
+64.917	Columbra Military band	e a banda chegou	           P13	Vinil	
+64.918	Glenn Miller	Glenn Miller Original Sound	           P13	Vinil	1975
+64.919	Glenn Miller Orchestra	Os grandes sucessos de Glenn Miller Orchestra	           P13	Vinil	1971
+64.920	Jair Rodrigues 	Jair Rodrigues n°2- Autografo de sucessos	           P13	Vinil	1971
+64.921	Hibari Misora	uta wa waga ino	           P13	Vinil	
+64.922			           P13	Vinil	
+64.923	Simonette e Orquestra de câmera RGE	Musica a luz da oração 	           P13	Vinil	
+64.924	 Nacional super som T.A	dança que eu quero ver	           P13	Vinil	1991
+64.925	Associação de canto coral camerata Rio de Janeiro Regente: Henrique MorelenbaumPadre Jose Mauricio Nunes Garcia, Missa Nossa Senhora do Carmo		           P13	Vinil	
+64.926	Janet Jackson	Control	           P13	Vinil	1986
+64.927	Leila Pinheiro 	Benção Bossa nova	           P13	Vinil	1989
+64.928	Milton nascimento	yariatê	           P13	Vinil	1987
+64.929	Marisa	Viagem	           P13	Vinil	1973
+64.930	Caetano veloso e a outra banda da terra	Muito:detro da estrela azulada 	            P13	Vinil	1978
+64.931	 Trilha de Novela	Vale tudo	            P13	Vinil	1988
+64.932	Richard Clsyderman	16 Momentos inesqueciveis	            P13	Vinil	1980
+64.933	Cristian Ferras com a orquestra Filamonica de Viena conduzida por Carl Sahurict		  P14	Vinil	
+64.934	Leandro e Leonardo	Leandro e Leonardo 	P14	Vinil	1992
+64.935	Leandro e leonarfdo	Leandro e Leonardo 	P14	Vinil	1989
+64.936	Ivon Curi	30 anos de sucesso	P14	Vinil	1976
+64.937	Chitãozinho e xororó	tudo por amor	P14	Vinil	1993
+64.938	Coral Universidade de São Paulo, regente Benedito Juarez	Coral Universidade de São Paulo	P14	Vinil	1974
+64.939	Virtuoso Symphony of London, conducted by Alfred Wallenstin	thawrowsky: Romeo and Juliet Overture e the Nuctcracker Suite	P14	Vinil	1971
+64.940	Gerard Hengevild	peças Favoritas para piano	P14	Vinil	1971
+64.941	Dick Farny	Penumbra roamnce	P14	Vinil	1983
+64.942	Nay matogrosso	pois é	P14	Vinil	1972
+64.943	Edith piaf	os grandes sucessos de edith piaf	P14	Vinil	1983
+64.944	Peraj taith Andre Kostelanetz 	Peray taith - Andre Kostelanetz os sucessos	P14	Vinil	1974
+64.945	Trilha de novela	pai heroi	P14	Vinil	1978
+64.946	Vários	I festival de choro brasileirinho	P14	Vinil	1977
+64.947	Lyra Musical Santa Cecilia	Retrita de sucessos	P14	Vinil	
+64.948	Orquestra Sinfônica Nacional de mannheimer, regente: Herbert Allbert	Haydn: surprise and Military	P14	Vinil	
+64.949	magda Tagliaferro	magda tagliaferro interpreta chopin	P14	Vinil	1972
+64.950	Andre Kostelanetz	Dance with me	P14	Vinil	1977
+64.951	Beniamino Gigli	O tenor imortal	P14	Vinil	
+64.952	Burt Bacharat e sua Orquestra	Burt Bacharat in Concert	P14	Vinil	1974
+64.953	Nicolo Paganini	the 25 Caprices	P14	Vinil	
+64.954	Menudo 	Reaching out	P14	Vinil	1984
+64.955	Luciano Pavaroti with the Nacional Phillar Monic Orchestra conducted by Kurt Hebert Adler	O Holy Night	          P14	Vinil	1976
+64.956	David Oistrakh, mstislav Rostropovich , s viatos lav Richter, Hebert von Karajan and the Berlim Philharmonic Orchestra	Beethoven Triple Concerto	P14	Vinil	1971
+64.957	Johnny Mathis	Me and Mrs Jones	P14	Vinil	1972/1973
+64.958	David Saidel	Barril de Chopp (lrirfass)	P14	Vinil	
+64.959	Ricardo Peres	Beethoven, Schubert and Schumam	P14	Vinil	1984
+64.960	Ronnie  Aldrich and Hes Two pianos with the London Orchestra	Great themes to Remember a velha russia	P14	Vinil	1972
+64.961	Stanly Black regendo a the London festival Orchestra e coró		P14	Vinil	1967
+64.962	New philharmonia Orchestra Regida por Erich Reinsdorf	Stravinsky: Petrushka	P14	Vinil	1973
+64.963	Antal Dorati Regendo a the New Philharmonia Orchestra	dvorak: New World Sympjony	P14	Vinil	1970
+64.964	Werner Muller And His Orchestra	spectacular tangos	P14	Vinil	1981
+64.965	Werner Muller And His Orchestra	spectacular tangos	P14	Vinil	1967
+64.966			P14	Vinil	
+64.967			P14	Vinil	
+64.968	Maria Bethania	Dama	P14	Vinil	1972
+64.969	Usa for Africa	usa africa	P14	Vinil	
+64.970	Meirelles e sua orquestra	Brazilian beat vol II	P14	Vinil	1967
+64.971	Beethoven fith symphony	Beethoven fith symphony	P14	Vinil	1971
+64.972	um Piano 		P14	Vinil	
+64.973	Black sabbath	 vol 4		Vinil	
+64.974	Al klink	 The Big band  Sound of the thirtle 		Vinil	1971
+64.975	Cesar Camargo Mariano 	Mitos		Vinil	1987
+64.976	Paul Mccartney	Flowers in the Dirt		Vinil	1989
+64.977	Paulinho da Viola 	10 anos		Vinil	1985
+64.978	Emilio Santiago	personalidade		Vinil	1990
+64.979	Paul Simon	Graceland		Vinil	1982
+64.980	Peter Cetera	solitude solitaire		Vinil	1986
+64.981	Johnny Mathis	Song Sung Blue		Vinil	1972
+64.982	Carlos Poyares	Som de Prata Flauta de lata		Vinil	1975
+64.983	Mantovani	imortais classicos 		Vinil	
+64.984	Wynton  kelly Trio  wes montgomery	Smokin´s at the  half note		Vinil	1965
+64.985	Mario Albanese	Jequibal na broadway		Vinil	1967
+64.986	george gershwin 	 biggest hits		Vinil	
+64.987	Peças favoritas para piano	Peças favoritas para piano	P15	Vinil	1971
+64.988	Peruzzi e sua Grande Orquestra de Cordas	Classicos do samba	P15	Vinil	1967
+64.989	Tito Shipa	L'art de Tito Schipa	P15	Vinil	1969
+64.990	Egberto Gismonti	Agua e vinho	P15	Vinil	1972
+64.991	Carmen Cavallaro	Carnaval em Veneza 	P15	Vinil	
+64.992	Daniel Berenboim orchestre de paris	Hector Berliz	P15	Vinil	1980
+64.993	Desmond Bradley	Gripsy: Musica	P15	Vinil	1972
+64.994	The Stylistics	The Best of Stylistics 	P15	Vinil	1986
+64.995	Varios	Samba, sour e ouriço: o melhor carnaval de todos os tempos vol 3	P15	Vinil	1978
+64.996	varios 	Disco machine	P15	Vinil	1984
+64.997	The Beatles	Beatlemania	P15	Vinil	1964
+64.998	The Trinelords	doctoren the tards	P15	Vinil	1988
+64.999	Gilson Brothers	Gilson Brothers	P15	Vinil	1978
+641.000	Cameo	Single life	P15	Vinil	1985
+641.001	Skyy	Skyyline	P15	Vinil	1981
+641.002	Eleventh Hour	Hollywood hot	P15	Vinil	1976
+641.003	Stanly Black e sua orquestra	Espanha	P15	Vinil	1966
+641.004	Tito Shipa	Recital 	P15	Vinil	
+641.005	E power Biggs The Edward Tavv Brass  Ensemble, the Gabrielo  Consort la Fersci  Regido por Vottorio Negri	Gabrieli: Camzonas- para metais, madeiras, cordas e orgao	P15	Vinil	1973
+641.006	Paul m cartiney	Apple	P15	Vinil	1970
+641.007	Frank Pourcel	My love	P15	Vinil	1973
+641.008	Chico Buarque	Os grandes sucessos de Chico Buarque Vol 3	P15	Vinil	1971
+641.009	Elizeth Cardoso e Silvio Caldas	Eliseth  cardoso e Silvio Caldas	P15	Vinil	1971
+641.010	Zequinha de abreu	imortais valsas de Zequinha de Abreu	P15	Vinil	
+641.011	Gregorio barros	Besame Mucho	P15	Vinil	
+641.012	Kaoma	Worldbeat	P15	Vinil	1989
+641.013	Leandro e Leonardo	Leandro e Leonardo	P16	Vinil	1990
+641.014	Toquinho e Vinicius de Moraes	Toquinho e Vinicius	P16	Vinil	1971
+641.015	Paul Mauriat	Serie: Autografos de sucesso	P16	Vinil	1971
+641.016	Frederica Von Stade: meio soprano, orquestra Filarmonica de Viena gerhart Hetzel e Claudio Albado	Gustav Mahler	P16	Vinil	1978
+641.017	Paulo Sergio 	Paulo Sergio val 11	P16	Vinil	1977
+641.018	The Lettermen	The hit sounds of the lettermen	P16	Vinil	
+641.019	Emilio Pericoli	tl mondo	P16	Vinil	1966
+641.020	Benjamin Pearce Higgins	coros medievais	P16	Vinil	
+641.021	Beniamino Gigli	O terror imortal vol 3	P16	Vinil	
+641.022	Beniamino Gigli	O terror imortal vol 1	P16	Vinil	
+641.023	Trilha de novela	Dona Beija	P16	Vinil	1986
+641.024	Zeze de camargo e luciano 	Zeze de Camargo e Luciano	P16	Vinil	1995
+641.025	Chitaozinho e xororo	Cawboy do Asfalto	P16	Vinil	1990
+641.026	Trilha de Novela	O tempo e o vento	P16	Vinil	1985
+641.027	Tears for Fears	Songs from the big chais	P16	Vinil	1985
+641.028	Trilha de novela	salome	P16	Vinil	1991
+641.029	Trilha de novela 	Salomé internavional	P16	Vinil	1991
+641.030	Orquestra de Luis Carlos	Papsodia Russa 	P16	Vinil	1987
+641.031	Jean Michel jarre	Jean Michel jarre Concerts Lyon Houston	P16	Vinil	1987
+641.032	Pedrinho Mattar	Brasileirinho	P16	Vinil	1981
+641.033	Milton Nascimento	Gerais	P16	Vinil	1976
+641.034	Trilha de Novela	Pantanal	P16	Vinil	1990
+641.035	Freddie Hublard	Ready For Freddie	P16	Vinil	1976
+641.036	The Internacional pop Orquetra 	The Internacional pop orchestra	P16	Vinil	
+641.037	 Zimbo Frio	Opus Pop	P16	Vinil	1972
+641.038	Astor Piazzolla	Libertango	P16	Vinil	1974
+641.039	Varios	Vozes de alivio	P16	Vinil	1964
+641.040	Nelson gonçalves	a pedidos	P16	Vinil	1966
+641.041	Chico Buarque 	Chico buarque	P16	Vinil	1989
+641.042	Benito Juarez e Orquestra Sinfonica campinas	Orquestra Sinfonica de Campinas interpretam carlos gomes e almeida Prado 	P16	Vinil	1978
+641.043	Bidu Sajão	serie: interpretações inesqueciveis	P16	Vinil	1973
+641.044	Chico Buarque 	Chicocanta: Cabalar, o elogio da Traição		Vinil	1973
+641.045	Alfredo marceneiro	o melhor de alfredo marceneiro	P16	Vinil	1989
+641.046	varios	Sambas Reunidos	P16	Vinil	1973
+641.047	Antonio carlos Jobim	Stone Flower	P16	Vinil	1970
+641.048	Antonie Duhamel	Antonio Vivaldi	P16	Vinil	1971
+641.049	Bob Dylan	Highway 61 Revisit	P16	Vinil	1965
+641.050	Arthur Moreira Lima	Com Licença	P16	Vinil	1982
+641.051	Gerald Mertens	Musica para meditação	P16	Vinil	-
+641.052	Milton banana frio	Samba é isso	P16	Vinil	1977
+641.053	Turubio Santos	Os grandes sucessos do violão latino americano	P17	Vinil	1982
+641.054	Raimundo Fagner	Traduzir-se	P17	Vinil	1981
+641.055	Arthur Moreira Lima Interpreta Ernestro nazare	Arthur Moreira Lima Interpreta Ernestro nazare	P17	Vinil	1975
+641.056	Trilha de filme	Flashdance	P17	Vinil	1983
+641.057	Zeca Pagodinho	Zeca Pagodinho	P17	Vinil	1986
+641.058	Lamartine Babo	Lamartine babo	P17	Vinil	1967
+641.059	The beatles	Rubler soul	P17	Vinil	1966
+641.060	The Beatles	sat pepper´s lonely hearts club band	P17	Vinil	1967
+641.061	Varios	Club classics vol	P17	Vinil	-
+641.062	Vários	Non Stop Dancing 7	P17	Vinil	1969
+641.063	Trilha de novela	Jogo da vida	P17	Vinil	1982
+641.064	Vera Astrachan	Vera Astrachan	P17	Vinil	1984
+641.065	Trilha de novela	champagne internacional	P17	Vinil	1984
+641.066	Trilha de Novela	Ti Ti Ti- Internacional	P17	Vinil	1985
+641.067	Trilha de Novela	chega mais internacional		Vinil	1980
+641.068	Varios	Jive presents "in house" vol1	P17	Vinil	1989
+641.069	The Bee Gees	Spirits having flown	P17	Vinil	1979
+641.070	Trilha de novela	Agua viva	P17	Vinil	1980
+641.071	Trilha de Novela	sol de verão internacional	P17	Vinil	
+641.072	Trilha de Novela	Pai Heroi internacional	P17	Vinil	1979
+641.073	Trilha de Novela	Duas Vidas Internacional	P17	Vinil	1977
+641.074	Joe Harnell	Moving on	P17	Vinil	
+641.075	Henry Gross	Release	P17	Vinil	1976
+641.076	Varios	Som Magico  padrão 670	P17	Vinil	1974
+641.077	The Fevers	O sol nasce para todos	P17	Vinil	1975
+641.078	Cazuza e Barão vermelho	melhores momentos Cazuza e Barão vermelho	P17	Vinil	1989
+641.079	Triha de Novela	Agua viva internacional	P17	Vinil	1980
+641.080	Trilha de Novela	Selva de Pedra 	P17	Vinil	1986
+641.081	Varios	Hits Brasil- vol 4	P17	Vinil	1988
+641.082	Antonio Marcos	Antonio Marcos	P17	Vinil	1986
+641.083	Elton John 	Os Grandes sucessos de Elton John	P17	Vinil	1977
+641.084	Trilha de Novela	Guerra dos sexos	P17	Vinil	1983
+641.085	Trilha de Novela	O sexo dos amigos 	P17	Vinil	1989
+641.086	Simone	Delirios, delicia		Vinil	1983
+641.087	Pet Shop Boys	Instrospective	P17	Vinil	1988
+641.088	Lupicino Rodrigues	Historia da Musica Popular Brasileira vol 10	P17	Vinil	1970
+641.089	Chico Buarque de Hollanda	Historia da musica Popular Brasileira vol 4	P17	Vinil	1970
+641.090	Varios	Special Disc Jockey	P17	Vinil	1976
+641.091	Trilha de novela	os gigantes internacional 	P17	Vinil	1979
+641.092	Trilha de novela	coração alado	P17	Vinil	1980
+641.093	Astor e sua Orquestra	Boleros em Orquestra	p18	Vinil	
+641.094	Varios	san remo 65	P18	Vinil	
+641.095	Varios	Hot Hits Manchete	P18	Vinil	1983
+641.096	Varios	discoteca cocota vol 2	P18	Vinil	1976
+641.097	Peppino di capri	peppino de capri	P18	Vinil	
+641.098	Billy Jriles	America Tropical	P18	Vinil	1974
+641.099	Vaughan Mason and cew	Bounce, Rock, Skate,Roll	P18	Vinil	1980
+641.100	Varios	Valsas Brasileiras	P18	Vinil	1980
+641.101	Bert kaempfert	Love That Bert kimpfert	P18	Vinil	1969
+641.102	Trilha de Novela	Fogo sobre terra	P18	Vinil	1974
+641.103	Darius Brubeck	Chaplin's back 	P18	Vinil	1972
+641.104	Titãs	Televisão	P18	Vinil	1989
+641.105	MPB4	De Palavra em Palavra	P18	Vinil	1971
+641.106	The London symphony Orchestra and the royal choral soviety	Hooked on Rock Classics	P18	Vinil	1982
+641.107	Blitz	As aventuras da blitz	P18	Vinil	1982
+641.108	Ze da galera- Jô Soares	Se liga, Brasil	P18	Vinil	1986
+641.109	Miguel Aceves Megia	La voz de Mexico	P18	Vinil	
+64.110	Firng Hang Record LTDA	Fantastic Melody	P18	Vinil	
+641.111	Nina Hagen	World Now	P18	Vinil	1986
+641.112	Pet shop Boys	actually	P18	Vinil	1987
+641.113	Shalaman	Theree for love	P18	Vinil	1981
+641.114	Trilha de filme	into the night: um romance muito perigoso	P18	Vinil	1985
+641.115	Jorge Veiga 	È sempre o papai		Vinil	1955
+641.116	Orq Viennense Boemia	Estudiantina		Vinil	1883
+641.117	Valzar della	Massobrio Caldarella		Vinil	1939
+641.118	Zeller Erna Berger Julius Patzak	the fowler		Vinil	
+641.119	  			Vinil	
+641.120				Vinil	
+641.121				Vinil	
+641.122				Vinil	
+641.123				Vinil	
+641.124				Vinil	
+641.124				Vinil	
+641.125	valzer della domenica			Vinil	
+641.126	Zeller, Erna Berger, Julius Patzak, Alois Melichar	The Fowler		Vinil	1998
+641.127	Fritz Kreisler, Carl Lamson	Victrola		Vinil	
+641.128	Alfredo de Angelis	Com o se muere de Amor		Vinil	
+641.129	Carlos Ramirez com Orquestra	Para qué Recordar		Vinil	
+641.130	Anibal Troilo e sua orquestra	la la malet		Vinil	
+641.131	Marian Anderson 	Te Deum		Vinil	
+641.132	Peter Kreuder	Melodias de Astrauss		Vinil	
+641.133				Vinil	
+641.134	Noburu Kirishima	hayuge		Vinil	
+641.135				Vinil	
+641.136	Trio 'los nativos'	Sombras de Gloria		Vinil	
+641.137	Milionaios do ritmo	Ela Foi Embora		Vinil	
+641.138	Pedro Raimundo	Adeus Mariana 		Vinil	
+641.139	Hugo Romani	Amorosamente		Vinil	
+641.140	Luiz Gonzaga	O torrado		Vinil	
+641.141	Orq Viennense Bohemia 	Aquarellas		Vinil	
+641.142				Vinil	
+641.143				Vinil	
+641.144				Vinil	
+641.145				Vinil	
+641.146				Vinil	
+641.147				Vinil	
+641.148				Vinil	
+641.149				Vinil	
+641.150				Vinil	
+641.151				Vinil	
+641.152				Vinil	
+641.153				Vinil	
+641.154				Vinil	
+641.155				Vinil	
+641.156				Vinil	
+641.157				Vinil	
+641.158				Vinil	
+641.159				Vinil	
+641.160				Vinil	
+641.161				Vinil	
+641.162				Vinil	
+641.163				Vinil	
+641.164				Vinil	
+641.165				Vinil	
+641.166				Vinil	
+641.167				Vinil	
+641.168				Vinil	
+641.169				Vinil	
+641.170				Vinil	
+641.171				Vinil	
+641.172				Vinil	
+641.173				Vinil	
+641.174				Vinil	
+641.175				Vinil	
+641.176				Vinil	
+641.177				Vinil	
+641.178				Vinil	
+641.179				Vinil	
+641.180				Vinil	
+641.181				Vinil	
+641.182				Vinil	
+641.183	Allrim		P41	Vinil	
+641183 A	Silvana Maargano	Baião de ana e t'ho Voluto bene	P41	Vinil	
+641183 B	Tito Schipa	Ave Maria/ a Serenata	P41	Vinil	
+641183 C	Cauby Peixoto	Quebranto/lambizando o sêlo	P41	Vinil	
+641183 D	Linda Baptista	Prece de um Sambista/ Chico Viola	P41	Vinil	
+641183 E	Canhoto e seu Regional	Bye Bye Blues Jambalaya	P41	Vinil	Descartado
+641183 F	Waldir Azevedo	Dansando com Você/ Pretenda	P41	Vinil	
+641183 G	Emilinha Borba	A agua lava tdo		Vinil	
+	Bill Farr	Tira a bôca do caminho	P41	Vinil	
+641183 H	Georges BouLAnger	Tango torero/serenata cigana	P41	Vinil	
+641193 I	I Alfredo de Angelis	La Cumparsita/madre	P41	Vinil	
+641.184	Allrim		P42	Vinil	
+641184 A	Trio Cristal 	Curuzu verá/nuestro Juramento	P42	Vinil	
+641184 B	Mario Gennari Filho	Parabens São Paulo/Lili Valsa	P42	Vinil	
+641184C	Francisco Alves 	Ave Maria;/ Nervos de aço	P42	Vinil	
+641184 D	 Lana Bittencourt	Esquecimento/ Ninguem vem me dizer	P42	Vinil	
+641184 E	Noberto Baldauf	é tão sublime o amor/ arriverderci Roma	P42	Vinil	
+641184 F	Adilson Ramos	Sonhar contigo/ sina que Deus me deu	P42	Vinil	
+641184 G	Benvindo Granda	Perfume de gardenias/que si/que si	P42	Vinil	
+641184  H	Paschval Melello	Ciganinha/cuco	P42	Vinil	
+641184 I	Pedro Vargas	tu, solo tuu/pobre corazon	P42	Vinil	
+641184 J	Francisco Alves 	Aquarela do Brasil	P42	Vinil	descartado
+641.185	Allbim 		P43	Vinil	
+641185 A	Danielle Serra	Sorvini/Ho Sog nato te	P43	Vinil	
+641185 B	Ezio Pinza	Falling in love with me/Dancing	P43	Vinil	
+641185 C 	Linda baptista	Dona divergencia vingança	P43	Vinil	
+641185 D	Luciano Tajoli	Fala-me de Amor maria/canção do amor	P43	Vinil	
+641185 E	varo e sua Orquestra e Ivo Curi	Ritmos de boite	P43	Vinil	
+641185 F	Dinah Shora	cortesias/Apaixonada	P43	Vinil	
+641185 G	Georges Ulmer	C'ist loin tout ça/ Pigalle	P43	Vinil	
+641185 H	Gordon Jenkim	Meu coração tolo/encantada	P43	Vinil	
+641185 I	Peter Kreuder	Gershwn Medkey	P43	Vinil	descartado
+641.186	Allbum		P44	Vinil	
+641186 A	Francisco Alves	Maria la o/quem ha dizer	P44	Vinil	
+641186 B	Francisco Alves	Caminhemos/Baia com H	P44	Vinil	descartado
+641186 C	Orlando Silva	Meu Romance/Neusa	P44	Vinil	
+641186 D	Alades gerardi	Cinzas do passado/Antonico	P44	Vinil	
+641186 E	João Dias	Luzes da Ribalda/ padam... padam	P44	Vinil	
+641.187	Allbim 		P45	Vinil	
+641187 A	Chucho Martinez	Maria Bonita/amor de mi vida	P45	Vinil	
+641187 B	victor young	together/love letters	P45	Vinil	
+641187 C				Vinil	
+641187 D	the melachrino Orchestra	My song of sping/ le you go	P45	Vinil	
+641187 E	Lucienne Delule	 bolero/ embrasse moi	P45	Vinil	
+641.187	Leciana Alban Boys		P45	Vinil	
+641187 F	Fernando Alleuerme			Vinil	
+641187 G	Tito Puente 	Ran-kan-kan		Vinil	1992
+641187 H	Mario gennani	terceiro homem		Vinil	1951
+641187 I	Ruy rey	Rico mambo		Vinil	1951
+641187 J	Maria Alma	que te parece		Vinil	
+641188 A	Sacasa e sua orquestra 	Mambo		Vinil	
+641188 B	Neil Sedaka 	One way ticket		Vinil	1961
+641188 C	Sylvio Mazzucca	Cha-hua-hua		Vinil	1958
+641188 D	The Everly Brothers	I kissed you		Vinil	1957
+641188 E	Elvis Presley	Treat Me Nice 		Vinil	1956
+641188 F	The Teenagers	A Boy Without a Girl		Vinil	1959
+641189 A	Luiz Gonzaga	vira e mexe- xamego		Vinil	1941
+641189 B	Luiz Gonzaga	No meu pé de Serra I pagode russo	P47	Vinil	
+641189 C	Luiz Gonzaga	Adeus Rio de Janeiro Dei Bantú-Maracatú	P47	Vinil	
+641189 D	Carlo-Buti	Mosteiro de santa Clara/velha florenç	P47	Vinil	
+641189 E	Luiz Gonzaga	Sulindo do céu	P47	Vinil	Descartado
+641189 F	Alain Homans	Fuga da frica melancolie	P47	Vinil	
+641189 G	Indios Tabajaras	tambori indio/acaracary	P47	Vinil	
+641189 H	Mario Gennari Filho	ell moreillero ou ocu ou Racha	P47	Vinil	
+641189 I	Roberto Inglez	Rio de Janeiro/ Tres palavras		Vinil	
+641189 J	Luiz Gonzaga	Siridó/ légua tiona	P47	Vinil	
+641190 A	João de Barro- Francisco Mignone	Os quatro Herois Parte 1 e parte 2	P48	Vinil	
+641190 B	João de Barro- Francisco Mignone	Historia da Batatinha parte 1 e parte 2	P48	Vinil	
+641190 C	João de Barro- Francisco Mignone	Historia da Batatinha parte 3 e parte 4	P48	Vinil	
+641190 D	Thieza - Augusto Mesquisa 	O cágado e o gambá/ a cigarra e a formiga	P48	Vinil	
+641190 E	Thieza - Augusto Mesquisa 	A cigarra e a formiga / o cágado e o gambá	P48	Vinil	
+641190 F	João de Barro 	Chapeuzinho Vermelho parte 1 e parte 2	P48	Vinil	
+641190 G	João de Barro	Chapeuzinho Vermelho parte 3 e parte 4	P48	Vinil	
+641190 H	João de Barro	A formiguinha e a neve parte 1 e parte 2	P48	Vinil	
+641190 I	João de Barro - Francisco mignone	Os quatro Herós parte 1 e parte 2	P48	Vinil	
+641191 A	Xavier cugat	Loca flusion pa- lan- can-pan	P49	Vinil	
+641191 B	Charles Frenet	monilmontanti	P49	Vinil	
+641191 C	Xavier Augat	Numa  Ilha com Você	P49	Vinil	
+641191 D	Roberto Inglez e sua orquestra	Serenata/noturno	P49	Vinil	
+641191 E	Roberto Inglez e sua orquestra	la Paloma/ o criador de melodias	P49	Vinil	
+641191 F	Roberto Inglez e sua orquestra	Ana Lucia/Laura	P49	Vinil	
+641191 G	Roberto Inglez e sua orquestra	Nasá  para Bailar	P49	Vinil	
+641191 H	Roberto Inglez e sua orquestra	Mambo jambo/ meu coração solo	P49	Vinil	
+641191 I	Roberto Inglez e sua orquestra	Canção de Daniela/ as folhas mortas	P49	Vinil	
+641191 J	Gregorio Barrios	Alerazame asi/lagouma de san gre	P49	Vinil	
+641192 A	banda do canecão	100 anos de carnaval parte 1 e parte 2 	P50	Vinil	
+641192 B	Banda do canecão	100 anos de carnaval parte 1 e parte 2	P50	Vinil	
+641192 C	Banda do canecão	100 anos de carnaval parte 1 parte 2	P50	Vinil	
+641193 A	Woldyr azedo	cinco malucos/ o que é que há	P50	Vinil	
+641193 B	Mario Gennari Filho e garoto		P51	Vinil	
+641193 C	Mario Gennari Filho e garoto	Bailão caçula kalu/melaricolee	P51	Vinil	
+641193 D	Abele Ferreira	Sururú no Galinheiro/ haroldo no choro	P51	Vinil	
+641193 E	Gaja e sua orquestra	Celia- valsa/so celo amor vale a vida	P51	Vinil	
+641193 F	Jacole	Teu beijo- choro choro de varanda	P51	Vinil	
+641193 G	Nelson Miranda	                                                                                                                                                                                                 	P51	Vinil	
+641193 H	Jacole	Cristal- choro/bole tudo-ecortido Alto	P51	Vinil	
+641193 I	Raul de barros 	Joseli no samba	P51	Vinil	
+641193 J	Bert campbell e sua orquestra 			Vinil	
+641193 K	Castinha e Inhana	India/meu primeiro amor	P51	Vinil	
+641193	Trio madrigal 	Bom Dia do Mistor eco cormeite ao amor 	P51	Vinil	
+641194 A	 Carmen Miranda	Cai cai? Arca de Noé	P52	Vinil	
+ 641194 B	Ethel Smicth	Tico- tico (1) Lero-lero (2) bem te vi atrevido	P52	Vinil	descartado
+641195 A	Antonio Carlos			Vinil	
+641195 B	S Different" 	Beyond the bkue horizon/ rosalie	P53	Vinil	
+641195 C	Brain Hyland 	That's How Much/ Baley Face	P53	Vinil	
+641195 D	Frankie Lymon	Buzz buzz buzz/ Little bitty pretty one	P53	Vinil	
+641195 E	The Clatters	it's Laining outside/ my Serenade	P53	Vinil	
+641195 F	Bob Manning 	After My Laughto came tars my loree song to you 	P53	Vinil	Descartado
+641196 A	 Edu	Moto Cerpeto/ poema 	P54	Vinil	
+641196	 Pecci	Nossa  senhora 	P54	Vinil	
+641187 F	Fernando Alleuerme	Aubana can ay de mi pecado	P45	Vinil	
+641187 G	Tito Puente e seu Conjunto 	Ran- kan- kan-son mambro/timbal y bongó- Mambo	P45	Vinil	
+641187 H	Mario Gennari Filho e Acordon	maringá	P45	Vinil	
+641187 J	Rey Rey e sua orquestra 	Rico mambo (manbo jambo)	P45	Vinil	
+641187 J	Maria Alma 	que te parece/ culpalele	P45	Vinil	
+641188 A 	Sacasa e sua orquestra 	Mambo/ Guardando um Recurso	P46	Vinil	
+641188 B	Neil Sedata	oh!/ Carol/ one way Ticket	P46	Vinil	
+641188 C	Sybreio Mazzucca 	cha-  hua-hua/ you only you	P46	Vinil	
+641188 D	The everybrithers 	(til) Kissed you/oh what a feeling 	P46	Vinil	
+641188 E	Ehus Presley	Jailhouse lack/theat me Nice 	P46	Vinil	
+641188 F	The  Teenagers	A boy Without a girls/ Meiterranean Moon		Vinil	
+641189 A	Luiz Gonzaga	Bailão	P47	Vinil	
+641189 B	Luiz Gonzaga	 No Meu Pé da serra/ Pagode Russo	P47	Vinil	
+641189 C	Luiz Gonzaga	Adeus  Rio de Janeiro		Vinil	
+641189 D	Luiz Gonzaga	Mosteiro de santa Clara		Vinil	
+641189 E	Luiz Gonzaga	Sulindo ao ceu	Quebrado	Vinil	
+641196 C	Orquestra Victor Brasileira 	Trimareeras de beijos / beijos direinais 	P54	Vinil	
+641196 D	Alreerenga e Ranchinho	Saudade de Ouro Preto / adeus paioça	P54	Vinil	
+641196 E	Will Glahé e sua orquestra	Barril de chopp/batatinhas	P54	Vinil	
+641196 F	Waldir Clman	cao cao mari picao/mambo on espanã	P54	Vinil	
+641196 G	Waldyr Azevedo 	orai por mim/ quintadinha 	P54	Vinil	
+641196 H	Mario Zan	Po de mico 	P54	Vinil	
+641196 I	Peci (sanc) e coly (peiolão)	Pingos de ouro 	P54	Vinil	
+641196 J	Antenogenes Silva	arrasta pé	P54	Vinil	
+641196 K	Orquestra vivtor brasileira	Romatica leismo de amor 	P54	Vinil	
+641196 L	Mario Gennari Filho	namoro sertanejo / a saudade chegou	P54	Vinil	
+641196 M	Carlos galhardo	Marta/uma casa portuguesa	P54	Vinil	Descartado
+641197 A				Vinil	
+641197 B				Vinil	
+641197 C	Coro del Instituto de ciegos de venezuelas	Vamos caracterizados	P55	Vinil	
+641197 D	Ninõ d la Rosa Fina de casares	mas bonita que uma estrela	P55	Vinil	
+641197 E	Imperio artgentina	La segadura	P55	Vinil	
+641197 F	Los Churumbeles de espanã 	la purgen de la macarena 		Vinil	
+641197 G	Cuento Infantil	Aladino 		Vinil	
+ 641197 H	Imperio artgentina	El dia que ejo naci 	P55	Vinil	
+641197 I	Carlos Monteja	meclici granadina	P55	Vinil	
+641197 J	Trio Los panchos	Cielito lindo Huasteco 	P55	Vinil	
+641198 A	Vitor  Devarzens 	Alias Ciganas	P55	Vinil	
+641198 B	Orquestra Filarmonica de Roma	Crepusculo dos Deuseus	P56	Vinil	
+641198 C	Nova Orquestra sinfonica de londres 	Uma  noite em monte carmo	P56	Vinil	
+641198 D	Orquestra Filarmonica de Roma	ballet de A Bela ADormecida 		Vinil	
+641198 E	Nova Oruqestra Sinfonica de Londres 	Moto cerpetuo		Vinil	
+641198 F	Oruqestra da societe	Orfeu no inferno	P56	Vinil	
+641198 G	orquestra da societe desconcertes symphonique de paris	Mann Barcelona 	P56	Vinil	
+641198 H	Orquestra da Opera v estadual de viena 	Monumento: menutto: allegratto frio	P56	Vinil	
+641198 I	orquestra da societe desconcertes symphonique de paris	Marcha dos Soldadinhos de cheimbo	P56	Vinil	
+641198 J	Nova Orquestra sinfonica de londres 	trepak, dança de chinesa	P56	Vinil	
+641198 K	nova Orquestra sinfonica de londres 	andante contsile	p56	Vinil	
+641198 L	Orquestra da Opera v estadual de viena 	Matcha militar 	P57	Vinil	
+641199 A	Nova Orquestra sinfonica de londres 	Morcego- abertura 	P57	Vinil	
+641199 B	Coral de Jonh Norman	anelalucia , charmanice 	P57	Vinil	
+641199 C	Orquestra Filarmonica real	o Relogio sincopado	P57	Vinil	
+641199 D				Vinil	
+641199 E				Vinil	
+641199 F	Orquestra filarmonica real 	Excertos do concorto	P57	Vinil	
+641199 G	The voices of Robert Macdonald	Musica e penumbra parte 1 e 2	P57	Vinil	
+641199 H	Henri lene e sua orquestra	violino e roamance parte 1 e 2	P57	Vinil	
+641199 I	Al caiala e sua orquestra 	paraiso hareacarro	P57	Vinil	
+641200 A	Maria zan	Pedregulho /na sanfonia do gaucho	P58	Vinil	
+641200 B	Maria Zan	El Choclo/namoradas	P58	Vinil	
+641200 C	Jacob	bonicates de muletas	P58	Vinil	
+641200 D	Jacob	Flor de abacate	P58	Vinil	
+641200 E	Maria Zan	festa na roça/nossa amizade	P58	Vinil	
+641200 F	Djalma Ferreira 	Samba que eu quero ver	P58	Vinil	
+641200 G	Nelson Miranda	Trinca de azes/dengoso	P58	Vinil	
+641200 H	Mario Gennari Filho	valsa da meia noite 	P58	Vinil	
+641200 I	Henri lene e sua orquestra	chuva de ouro	P58	Vinil	descartado
+641201 A	Danças sinfonicas 	Danças sinfonicas	P59	Vinil	
+641201 B	Grandes temas romanticos 	Grandes temas romanticoa 	P59	Vinil	
+641201 C	bailados favoritos 	Bailados favoritos	P59	Vinil	
+641201 D	Valsa inesquciveis	Valsas inesqueciveis 	P59	Vinil	
+6412012 A	Fordinand Leitner	Ferdinand Leitner	P60	Vinil	
+ 641202 B	Mantevani	Mantevani	P60	Vinil	
+641202 C	Oscar danon	Oscar Danon	P60	Vinil	
+641202 D	Gilbert reinter	Gillert Reintor	P60	Vinil	
+641202 E	Oscar Danon 	Oscar Danon	P60	Vinil	
+641202 F	Massimo Freccia/Henri Lene e sua Orquestra	Massimo Freccial Henri Lene e sua orquestra 	P60	Vinil	
+641202 G	Josef Leo Gruller/Orquestra Volkesopor de Reiana	Orquestra Volkopor de Reiana	P60	Vinil	
+641202 H	Orquestra Filarmonica Real 	Orquestra Filarmonica Real 	P60	Vinil	
+641202 I	Orquestra Filarmonica de Roma 	Romeu e juliaeta 	P60	Vinil	
+641202 J	Orquestra Filarmonica real 	Orquestra Filarmonica Real 	P60	Vinil	
+641202 K	Orquetra filarmonica de roma/ Orquetra	Uma fonte de melodia 	P60	Vinil	
+641202 L	Orquestra filarmonica Real 	Orquestra Filarmonica real 	P60	Vinil	
+641203 A	Orquestra Mexica de cordas / Astor e sua Orquestra 	Boleros  eternos 	P60	Vinil	
+641203 B	Chick Talli e seu conjunto	Bem suaree	P61	Vinil	
+641203 C	Paul Westor  e sua orquestra 	Cruzeiro Musical	P61	Vinil	
+641203 D	Orquestra Cremeire 	Filmelandia	P61	Vinil	
+641203 E	Les Elgart e sua orquestra 	Só para Dançar	P61	Vinil	
+641204 A	Os caretas 	os caretas	P62	Vinil	
+641204 B	Os Caretas 	os Caretas	P62	Vinil	
+641204 C	Os Caretas 	os caretas	P62	Vinil	
+641205 A	Sergio Ricardo 	Sergio Ricardo	P63	Vinil	
+641205 B	Cândido das Meres 	Cândido das meres	P63	Vinil	
+641205 C	Milton Nascimento 	Milton Nascimento	P63	Vinil	
+641205 D	Ernestro Nazareth	Ernestro Nazareth	P63	Vinil	
+641205 E	Juca Chaves 	Juca Chaves 	P63	Vinil	
+641205 F	Haroldo Lobo	Haroldo Lobo	P63	Vinil	
+641205 G	Johnny Alf	Johnny Afe	P63	Vinil	
+641205 H	Capiba	capiba	P63	Vinil	
+641205 I	Adonirabn Barboss	Adoniran Barbosa	P63	Vinil	
+641205 J	Elton medeiros 	Elton Medeiros	P63	Vinil	
+641205 K	Donga e os primitivos 	Donga e os primitivos	P63	Vinil	
+641206	Allberto Salles	Fala o coração/Maria conveição	P64	Vinil	
+641207	Carmelia Alves	O bailão em Paris/ adeus, adeus morena	P64	Vinil	
+641208	Palmeira e Luizinho	Baldorama macia/ buvoro pecaço	P64	Vinil	
+641209	Palmeira e Luizinho	buvoro pecaço/ baldorama Macia	P64	Vinil	
+641210	Dalva de Oliveira	Que sera/sertão do Jequié	P64	Vinil	
+641211	Teddy Rono 	Chella la-fox/moowzzella	P64	Vinil	
+641212	Armaldo riscuna	meu saleia/ Nossa senhora do amporo	P64	Vinil	
+641213	PaschoalMelillo	Ciganinha/cuco	P64	Vinil	
+641214	orquestra Victor brasileiro	Beijos direnais 	P64	Vinil	
+641215	Araci de Almeida 	Saia do caminho	P64	Vinil	
+641216	Carlos Laminez	A littemore of you amor	P64	Vinil	Descartado
+641217	Francisco Alves	chua-chuá oi yaya Bahiana	P64	Vinil	
+641218	Hal Mc Integre e sua	im conha see	P64	Vinil	
+641219	Orquestra 	My Baly	P64	Vinil	
+641220	Arnaldo Castro	Voce ai/ a boca do Jose 	P64	Vinil	
+641221	Doris Day Can Frank de vol e sua orquestra 	Whateree will be will be the lireo senie	P64	Vinil	
+641222	Carolina cardozo de Menezes	Calelochinha novidade	P64	Vinil	
+641223	Localizates tropicais	beleé/maracatucá	P64	Vinil	
+641224	Leo	Roma/ alemão/alguma coisa ela fez 	P64	Vinil	
+641225	full- spectrum	sorinderaft parte 1 e parte 2	P64	Vinil	
+641226	The High Hatters	Desfile de amores/ ja não se acostume 	P64	Vinil	
+641227	Tay Martin	begorrah	P64	Vinil	descartado
+641228	Froor Mareton and Daree Kaye	Fin can Alley Madly/ parte 1 e parte 2	P64	Vinil	
+641229	Beniamino Gigli	Mattinata/forna a surrientc	P64	Vinil	
+641230	Beniamino Gigli	os Palhaços/andrea chenior	P64	Vinil	Descartado
+641231	Beniamino Gigli	maria/ stormelli marini	P64	Vinil	
+641232	Irmãs Castro	Faz um ano (hace un  ano)	P64	Vinil	
+641233	Orquestra Dajas Bela	Nas Margens do bello	P64	Vinil	
+641234	Fred Williamos	Barrigudinha/bailão das moreninhas 		Vinil	
+641235	Pedro Raimundo	Tico-Tico no terreiro	P64	Vinil	Descartado
+641236			P65	Vinil	
+641237	Serra Ribeiro	2 iltima fahcas el sombero rojo	P65	Vinil	
+641238	Mantovani	El  Somlerero rojo		Vinil	Descartado
+641239	Ivan Curi e carmela alvees	Gauchita/me leva 	P65	Vinil	
+641240	Tee wee hunt	San	P65	Vinil	Descartado
+641241	Luiz Gonzaga	Respeita Januario/ a dança da moda 	P65	Vinil	
+641242	Harry Jarmes	Hermando's 	65	Vinil	Descartado
+641243	Dori day	faz/faz,faz/ somente tenho olhos para você	P65	Vinil	Descartado
+641244	Leslie Caron e mel ferrez	hi-didi, hi-lo	P65	Vinil	Descartado
+641245	Serra Ribeiro	Jungle fogões 	P65	Vinil	
+641246	Dick haymes	anjo ou demonio/ amado mio	P65	Vinil	Descartado
+641247	Al. jolson	As corridas de camptown/oh, susana		Vinil	Descartado
+641248	Roberto Silva	Dupla razão/ Felicissismo 	P65	Vinil	
+641249	Canção de natal	Canção de natal	P65	Vinil	
+641250	Alberto w sean	a noite santo/ o cheirinho de natal	P65	Vinil	
+641251	The Clatters	For the  First 	P65	Vinil	
+641252	Jorge Peliga/ Georges 	Eu fiz um prece/Cazé sacaite	P65	Vinil	
+641253	Neil sedaka	Moon of yold/i go ape	P65	Vinil	
+641254	Sexteto bertorino alma	Licor de são pauklo/ snhoritas do Braz	P65	Vinil	Descartado
+641255	carmen Miranda 	bambole/ chica chica boom chica	P65	Vinil	Descartado
+641256	As Copacabanas	Não há Dúreida/urubú malandro 	P65	Vinil	
+641257	Franco Ricci	Carcerato/ mala feita	P65	Vinil	Descartado
+641258 A	Forank	Forank		Vinil	
+641258 B	Mendelssohn	Mendelssohn	P66	Vinil	
+641258 C	Brahns	Brahns	P66	Vinil	
+641258 D	Rossini 	Rossini	P66	Vinil	
+641258 E	Richard Strauss	Richard Strauss	P66	Vinil	
+641258 F	Beethoven	Beethoven	P66	Vinil	
+641258 G	Straikovesky	Straikovesky	P66	Vinil	
+641258 H	Schumann	Schumann	P66	Vinil	
+641258 I	Tchaikosty	Tchaikosty	P66	Vinil	
+641258 J	Chopin	Chopin	P66	Vinil	
+641258 K	Bach	Bach	P66	Vinil	
+641258 L	Haydn	Haydn	P66	Vinil	
+641259	Noel Rosa	Noel Rosa	C13	Vinil	
+641260	Internacional	Eu Prometo	C13	Vinil	
+641261	Je T'aime 	Je T'aime	C13	Vinil	
+641262	Lamartine balbo	Lamartine Balbo	C13	Vinil	
+641263	Lua cheia de amor	Lua cheia de amor	C13	Vinil	
+641264	Benedito de paula	Banedito de Paula	C13	Vinil	
+641265	Renaissance	Renaissance	C13	Vinil	
+641266	Trevo mulher-amarelinha	Trevo mulher-amarelinha	C13	Vinil	
+641267	Conrado	Conrado	C13	Vinil	
+641268	José Mauricio Nunes garcia	Mantinas de natal	C13	Vinil	
+641269	Stravaganza Italiana 	Stravaganza Italiana	C13	Vinil	
+641270	Hits Jovem Pan	Hits Jovem pan	C13	Vinil	
+641271	Mistor sam	Fron Paris to New York	C13	Vinil	
+641272	Eart Wind e Fire 	Eletric Univerce	C13	Vinil	
+641273	Joao Mineiro e Marciano	Tarde demais para me esquecer	C13	Vinil	
+641274	Johann Sebastian Bach 	os concertos para violinho	C13	Vinil	
+641275	Supottramp 	grime of the lontury	C13	Vinil	
+641276	Paulinho da viola 	foi um rio que passou na minha vida 	C13	Vinil	
+641277	Fernando Germani	Fernando Germani	C13	Vinil	
+641278	Dareid  Rose 	Holiday fotr strings 	C13	Vinil	
+641279	Barry Withe	can't get Enough	C13	Vinil	
+641280	Bandeirantes FM	Bandeirantes FM	C13	Vinil	
+641281	Almir Sater 	um violeiro toca	C13	Vinil	
+641282	Vinicius de Morais 	Arca de noé	C13	Vinil	
+641283	Lafa Yette	Lafayette	C13	Vinil	
+641284	Chicago	Chicago	C13	Vinil	
+641285	Lesar Camargo e Helio Delmiro	Samambaice	C13	Vinil	
+641286	Flauta/cavaquinho e violão	Flauta/cavaquinho e violão	C13	Vinil	
+641287	Barriga de aluguel	Barriga de aluguel	C13	Vinil	
+641288	Black	Balanço	C13	Vinil	
+641289	Baianinho da Sanfona	Forró sem briga	C13	Vinil	
+641290	Alcione 	Promessa	C13	Vinil	
+641291	O mundo encantado da musica Popular	O mundo encantado da musica Popular	C13	Vinil	
+641292	Musica Popular Brasileira	Musica Popular Brasileira	C13	Vinil	
+641293	Hot Shot	Disco Mirc	C13	Vinil	
+641294	Coredy Records ETD	Creedydisco	C13	Vinil	
+641295	Mirc	Mirc	C13	Vinil	
+641296	O som Brasileiro do lundu a tropicalia	O son Brasileiro do lundu a tropicalia	C13	Vinil	
+641297	Edição Historica	Edição Historica	C13	Vinil	
+641298	Egmont- oureerteiro	Pequeno serão Musical	C13	Vinil	
+641299	Gaona e seu conjunto 	harpas marnelhosa	C13	Vinil	
+641300	Forck Pourcei	Paginas Celebres	C13	Vinil	
+641301	Gal costa	Gal Costa	C13	Vinil	
+641302	Gaucho da Fronteira 	Mensagem do sul	C13	Vinil	
+641303	Glenn Miller 	Glenn Miller	C13	Vinil	
+641304	Handel festa aquantica	Handel festa aquantica	C13	Vinil	
+641305	Joana canta lupicinio	Joana canta lupicinio	C13	Vinil	
+641306	João Bosco	João Bosco	C13	Vinil	
+641307	Meats Murdor 	Meats Murdor	C13	Vinil	
+641308	Musicas dos grandes mestres	Musicas dos grandes mestres	C13	Vinil	
+641309	Musicas inesqueciveis	Musicas inesqueciveis	C13	Vinil	
+641310	Oureoturese creludios das operas	Oureoturese creludios das operas	C13	Vinil	
+641311	Roberto Leal 	Quem somos nos	C13	Vinil	
+641312	Sertão Querido	Sertão querido	C13	Vinil	
+641313	Simone	Corpo e alma	C13	Vinil	
+641314	Model	Model	C13	Vinil	
+641315	Richard Wagner	Lannhauso	C13	Vinil	
+641316	Simone	Vicio	C13	Vinil	
+641317	Sonho meu	Sonho meu	C13	Vinil	
+641318	Atorileute to Charlie Chaplin	Atorileute to Charlie Chaplin	C13	Vinil	
+641319	Struss Waltzes	truss Waltzes	C13	Vinil	
+641320	Laercio	Brothers Johnson	C13	Vinil	
+641321	Who's next	Who's next	C13	Vinil	
+641322	Socran Saril	The hwes corporation	C13	Vinil	
+641323	Titãs	yo Black	C13	Vinil	
+641324	Trem da Alegria	Trem da Alegria	C13	Vinil	
+641325	Marcio/ Ragu/ Sensike os pa	Marcio/ Ragu/ Sensike os pa	C13	Vinil	
+641326	Vinicius de Morais 	Arca de noé	C13	Vinil	
+641327	Conto o amor de Vinicius	Com todo Amor do vinicius 	C13	Vinil	
+641328	Austin/Summer		C13	Vinil	
+641329	Sem informação		C13	Vinil	
+641330	Scala	Scala	C13	Vinil	
+641331	Convocação geral	Convocação geral	C13	Vinil	
+641332	Donna summer	The manderer	C13	Vinil	
+641333	Duo Glacial	Eterna Lembrança	C13	Vinil	
+641334	Elis Regina	Falso Brilhante 	C13	Vinil	
+641335	Elia, Essa mulher 	Elia, Essa mulher	C13	Vinil	
+641336	Evaldo Goureva, Jair Amorim, Adelio moreira	Evaldo Goureva, Jair Amorim, Adelio moreira	C13	Vinil	
+641337	Erwin Wiener	um piano romantico e alegre	C13	Vinil	
+641338	Boas festas	Boas festas	C13	Vinil	
+641339	Nelson Ned	Jesus te ama	C13	Vinil	
+641340	Lamartine balbo	Um hino no Carnaval Brasileiro	C13	Vinil	
+641341	Sergli Rachmaninoff	Concero n2 para piano e orquestra	C13	Vinil	
+641342	Uccio Gaeta	Uccio Gaeta	C13	Vinil	
+641343	Natal Celestial	 Natal Celestial parte 1 e 2	C13	Vinil	
+641344	Lafayette	Lafayette	C13	Vinil	
+641345	Assis Valente	Assis Valente	C13	Vinil	
+641346	Ouro e treta	Sinha-Sinha	C13	Vinil	
+641347	Zé Kêti	Zé Kêti	C13	Vinil	
+641348	Chão Sulino 	Chão Sulino	C13	Vinil	
+641349	José Augusto 	Casso a casso	C13	Vinil	
+641350	Elis Regina	A melhor de Elis 	C13	Vinil	
+641351	Folia 	Regina 	C13	Vinil	
+641352	The Who	Quadro Pheia	C13	Vinil	
+641353	Musicas inesqueciveis	Musicas inesqueciveis	C13	Vinil	
+641354	Elton John Supershow	Elton John Supershow	C13	Vinil	
+641355	Roupa nova 	Herança 	C13	Vinil	
+641356	Rita lee e Roberto	bombom	C13	Vinil	
+641357	Balanço Black	Balanço Black 1	C13	Vinil	
+641358	Samba enredo das escolas de samba do grupo 1	Samba enredo das escolas de samba do grupo 1	C13	Vinil	
+641359	Super Feliz 	Super Feliz	C13	Vinil	Descartado
+641360	Diana e marnein	Diana e marnein	C13	Vinil	
+641361	Altemar Dutra	Eu te agradeço	C13	Vinil	
+641362	Maurão, Nene e a turmada arca	Os luchos São nossos amigos	C13	Vinil	
+641363	John Lennon 	Liree in new York city	C13	Vinil	
+641364	Serrinha e cabloclinho	A seca/pocô louca boiada	C13	Vinil	
+641365	Led Zeppelin	Led Zeppelin	C13	Vinil	
+641366	Kool Moe  Dee	Kool Moe Dee	C13	Vinil	
+641367	The style council	Cafe Bleu	C13	Vinil	
+641368	Pedaço de mim	Pedaço de mim	C13	Vinil	
+641369	Mary Jane Girls	Mary Jane Girls	C13	Vinil	
+641370	Grandes mulheres grandes cançoes 	Grandes mulheres grandes cançoes	C13	Vinil	
+641371	The fat Boys are Back	Fat Boys	C13	Vinil	
+641372	The best of  jummy smith	The best of jummy smith	C13	Vinil	
+641373	Let's Roller	Let's Roller	C13	Vinil	
+641374	Fina Charles	I love to love	C13	Vinil	
+641375	Waldir Azevedo	Waldir Azevedo	C13	Vinil	
+641376	Airton Lima Barbosa	Quinteta Pella Lobos	C14	Vinil	
+641377	Miguel e Aninha 	pingo d'agua	C14	Vinil	
+641378	Biemeenido granda	Biemeenido granda	C14	Vinil	
+641379	Edição historica	Edição historica	C14	Vinil	
+641380	Introspective	Introspective	C14	Vinil	
+641381	Elba Ramalho	Felicidade urgente	C14	Vinil	
+641382	Eduardo Affonso	A mais lindas historias infantil	C14	Vinil	
+641383	O melhor do partido alto	O melhor do partido alto	C14	Vinil	
+641384	Alice Cooper	Muscle of love	C14	Vinil	
+641385	Belchior	"um show" dez anos de sucesso	C14	Vinil	
+641386	Dolbrão	Dolbrão	C14	Vinil	
+641387	parte mix	parte mix	C14	Vinil	
+641388	Mulheres, camera,ação!	Mulheres, camera,ação!	C14	Vinil	
+641389	Titãs	cabeça dinossauro	C14	Vinil	
+641390	Paulo Diniz	Paulo Diniz	C14	Vinil	
+641391	Diana ross especial	Diana ross especial	C14	Vinil	
+641392	Grupo pe no chão	Grupo pe no chão	C14	Vinil	
+641393	Belchior	Alucinação	C14	Vinil	
+641394	La Paloma	LA Paloma	C14	Vinil	
+641395	João Gilberto	Amoroso	C14	Vinil	
+641396	Caetano veloso e outras 	Simplismente te amo 	C14	Vinil	
+641397	Luiz Gonzaga	Simplismente te amo 	C14	Vinil	
+641398	Internacional	Jogo da vida 	C14	Vinil	
+641399	Salvador da bateria 	Salvador da bateria	C14	Vinil	
+641400	Internacional	Chega mais	C14	Vinil	
+641401	Assij Houstor	An umbruella Song	C14	Vinil	
+641402	Internacional	sol de verão	C14	Vinil	
+641403	Angela Maria	Angela Maria	C14	Vinil	
+641404	Olhai os lirios do campo 	Olhai os lirios do campo	C14	Vinil	
+641405	Julio inglesias	Non- stop	C14	Vinil	
+641406	Mara	Deixa o coração te guiar	C14	Vinil	
+641407	Billy strange 	Festival bang bang	C14	Vinil	
+641408	Orquestra sinfonica nbc	smetana	C14	Vinil	
+641409	Perreut	O gato de botas	C14	Vinil	
+641410	Trio parada dura 	Ultimo adeus	C14	Vinil	
+641411	Henry Mancini	Disco de ouro	C14	Vinil	
+641412	The best of  soul	The best of soul	C14	Vinil	
+641413	Lamartine balbo	Lamartine balbo	C14	Vinil	
+641414	Robert bentley  e sua orquestra	Robert bentley e sua orquestra	C14	Vinil	
+641415	John Demeer	Coens,crayers and cramises	C14	Vinil	
+641416	Loveng you	Loveng you	C14	Vinil	
+641417	Soul Grandetric	Soul Grandetric	C14	Vinil	
+641418	Samantcha song	Emotion	C14	Vinil	
+641419	The Surgarhill gang	The Surgarhill gang	C14	Vinil	
+641420	Orquestra Armorial	Orquestra Armorial	C14	Vinil	
+641421	Make it easy on youself	Burt bacha rach tenderly	C14	Vinil	
+641422	Enoch light e hits orquestra 		C14	Vinil	
+641423	Parada de sucessos 	Sambrasa 8	C14	Vinil	
+641424	Glenn Miller e sua orquestra	The great Glenn MIller		Vinil	
+641425	Grupo fundo de quintal	O mapa da Nina 	C14	Vinil	
+641426	Opera do malandro	Opera do malandro	C14	Vinil	
+641427	Grandes mulheres  	Grandes mulheres	C14	Vinil	
+641428	Grandes canções	Grandes canções	C14	Vinil	
+641429	The gap Band	The gap Band	C14	Vinil	
+641430	Escola Naval	ecos de Rullegagnom	C14	Vinil	
+641431	Internacional	o Outro	C14	Vinil	
+641432	Guck Mangione 	Feels so good	C14	Vinil	
+641433	Greatest Hits 	Discs of gold	C14	Vinil	
+641434	Nanda Rossi	Inreendareel	C14	Vinil	
+641435	excelsior 	a maquina do som	C14	Vinil	
+641436	Roberto Carlos 	Roberto Carlos	C14	Vinil	
+641437	Miguél Caló	Inutil/el renado	C14	Vinil	Descartado
+641438	Waldyr Azevedo	Brasileirinho	C14	Vinil	
+641439	Conway Witty	Blue Moon Lonely Blue boy	C14	Vinil	
+641440	Era de Ouro	Era de Ouro	C14	Vinil	
+641441			C14	Vinil	
+641442	The Beritain sings	As boas do Momento	C14	Vinil	
+641443	Sambas de enredo das escolas de sambas	Sambas de enredo das escolas de sambas	C14	Vinil	
+641444	Monica e Cebolinha 	Monica e Cebolinha no Mundo de Romeu e Julieta	C14	Vinil	
+641445	João Bosco Aldir Blanco	João Bosco Aldir Blanco	C14	Vinil	
+641446	A maquina do som	A maquina do som	C14	Vinil	
+641447	Roger froutman	The new zapp 	C14	Vinil	
+641448	João Mineiro e Marciano	IV V"	C14	Vinil	
+641449	Sol 33	Sol	C14	Vinil	
+641450	The Waltz Festival Orchestra	Valsas Inesqueciveis	C14	Vinil	
+641451	Fora Diavolo Selection	Fora Diavolo Selection	C14	Vinil	Descartado
+641451	Milton Nascimento	Milton Nascimento	C14	Vinil	Descartado
+641452	Pedro Vargas	Una Qualquiera	C14	Vinil	Descartado
+641453	Sireuca	Carioquinha no flamengoTico-tico no fuba	C14	Vinil	
+641453	Freon Ouri	Carcamleu-Bailão Baillão das velhas cantingas	C14	Vinil	Descartado
+641454	Drines Japones		C14	Vinil	
+641455	Zé do norte 	Meu cinhão coco/sodade,meu bem sodade-canção	C14	Vinil	
+641456	AnaSilva (inhana)	Meu  Rincãofedealecrim	C14	Vinil	
+641457	Aracíde Almeida	trêsapitos/Feito de Oração	C14	Vinil	
+641458	Ataulpho Alves es sua academia de samba		C14	Vinil	
+641459	Jorge Giulart 39	Teus Olhos entendem os meus 	C14	Vinil	
+641460	Arací Almeida	o "x" do eroplema não tem Tradução	C14	Vinil	
+641461	Silveiro Caldas n102	Homem marcado/amda mia	C14	Vinil	
+641462	Lisadinha n157	Meu Lienorte 	C14	Vinil	
+641463	Afonso Ortez lirado n163	Sonhadora/angelitos negros	C14	Vinil	Descartado
+641464	Jacob n160	Treme-treme/gloria	C14	Vinil	
+641465	Luiz Gonzaga n90	Quase maluco/vem morena-Bailão	C14	Vinil	
+641466	Silveira caldas n95	tarde de maio/chuva e vento	C14	Vinil	
+641467	Luiz Gonzaga 	cigarro de paia/bailão da garoa	C14	Vinil	
+641468	Ataulpho Alves 	ai que saudade da Amelia/não gosto de viver sem ela	C14	Vinil	
+641469	Jorge goulart	Jorge Goulart	C14	Vinil	
+641470	Jorge Veiga n70	Voltei/quem chorou fui eu	C14	Vinil	
+641471	Froon Curi n171	Carcambéu/Bailão das velhas antigas	C14	Vinil	Descartado
+641472	Mario Lanza	Because/for you alone	C14	Vinil	
+641473	Frean Curi	João Bobo-Valsa	C14	Vinil	Descartado
+641474	Francisco Alves n51	quem ha de dizer	C14	Vinil	
+641475	Vaughn Monroe e sua Orquestra	Single Saale/Liders in the sky	C14	Vinil	
+641476	Orq vennese- Boemia n40	quando vovó tinha 20 anos	C14	Vinil	
+641477	Enric Madrugueira e sua orquestra n39	canção da india ay-ay-ay	C14	Vinil	
+641478	Gregorios Barrios n37	de cigarro em cigarro	C14	Vinil	
+641479	Francisco Alvez n27	Lua nova/a voz do violão	C14	Vinil	
+641480	Nelson Gonçalves n29	quem sera/normalista	C14	Vinil	
+641481	Carlos Gargalho n30	Cortina de veludo	C14	Vinil	
+641482	Angela Maria n31	amor coisa estranha/só melancolia	C14	Vinil	
+641483	Carlos Gargalho n48	a pequena cruz do meu rosario	C14	Vinil	
+641484	Tati Casoni n36	Trantella maestro niente	C14	Vinil	
+641485	Vicente Cestino	meu Brasil/ noite cheia de estrela	C16	Vinil	
+641486	Severino Araujo	cidade maravilhosa/molengo	C16	Vinil	
+641487	Anjos do inferno	Seca pimenteira/mais um traçado	C16	Vinil	
+641488	Beniamino Gigli	se peroi goder la vita/mamma	C16	Vinil	
+641489	Orlando Silva 	 Sera que o velho quer broto	C16	Vinil	
+641489 F	Alain Romans	Melancolie/a) For Sentimental/b)when china boy meets china Girls	P47	Vinil	
+641489 G	INdios tabajaras	Tambor indio Acar Cary	P47	Vinil	
+641489 H	Mario Gennari Filho	Elnoveleiro ou vai ou racha	P47	Vinil	
+641489 I	Roberto Ingles	rio de janeiro/tres Palavras	P47	Vinil	
+641489 J	Luiz Gonzaga	Sírido légua tirana	P47	Vinil	
+641490 A	João de Barro Francisco Mignone	Os quatro Herois parte 1 e parte 2	P48	Vinil	
+641490 B	João de Barro Francisco Mignone	Historia da batatinha parte 1 e 2	P48	Vinil	
+641490 C	João de Barro Francisco Mignone	Historia da batatinha parte 3 e 4	P48	Vinil	
+641490 D	Thieza - Augusto Mesquita	O cagado e o Gambá	P48	Vinil	
+641490 E	Thieza - Augusto Mesquita	A cigarra e formiga	P48	Vinil	
+641490 F	João de Barro 	Chapeuzinho vermelho part 1 e 2	P48	Vinil	
+641490 G	João de Barro	Chapeuzinho vermelho part 3 e 5	P48	Vinil	
+641490 H	João de Barro	Formiguinha e a neve part 1 e 2	P48	Vinil	
+641490 I	João de Barro - Francisco MIgnone	Os quatri herois part 1 e 2 	P48	Vinil	
+641490	Mario Reis	A favela vai abaixo	C16	Vinil	
+641491	Araci de almeida	Silencio de um minuto	C16	Vinil	
+641492	Mario de Azevedo	subindo ao ceu/ supremo mestre	C16	Vinil	
+641493	Jacob   	Salots imperiais/flamengo	C16	Vinil	descartado
+641494	Emilha Borba	Mambo do gato/dez anos	C16	Vinil	
+641495	Francisco Carlos	aventura/minha prece	C16	Vinil	
+641496	Dircinha Batista	Adeus	C16	Vinil	
+641497	Irmãs Castro	Figa no peito/duas bandeiras	C16	Vinil	
+641498		Maringa	C16	Vinil	
+641499	Silveiro Caldas	chão de estrela/aranha	C16	Vinil	
+641500	Nelson Gonçalves	quem sera/normalista	C16	Vinil	
+641501	Orquestra Boston	os patinadores part 1 e 2	C16	Vinil	
+641502	Victor Silvester	Begin the beguine/if i should fall on loree again  	C16	Vinil	
+641503	Gregrorio Barros	Luna lunera	C16	Vinil	
+641504	Carlo Buti	Scriirimi/questa notte ti diro	C16	Vinil	
+641505	Roberto Inglez	Anda lucia Laura	C16	Vinil	
+641506	Waldir calmon	Mambro en espama	C16	Vinil	
+641507	Francisco Alves	Valsas dos namorados/pra esquecer	C16	Vinil	
+641508	Ivon Curi	Chanson Vagabande i mademaseli Hortensia	C16	Vinil	
+641509	Dr Alfonso Ortiz tirado	Calee llera blanca/ lavteria de la flores	C16	Vinil	
+641510	Rose Murphy	I can't giree yu anything but loree,baby		Vinil	
+641511	Jorge Veiga 	Bota agua na canjica 	C16	Vinil	
+641512	Albertinho fortuna	mano a mano	C16	Vinil	
+641513	Luiz Gonzaga	Juca/Sao Joao na loça	C16	Vinil	
+641514	Gino Bechi	la strada del bosco/soli soli nela notte	C16	Vinil	
+641515	Linda Baptista e trio madrigal	Prece de um Sambista/Chico viola	C16	Vinil	
+641516	4 azes e 1 coringa	Cabelos brancos/Tentação	C16	Vinil	
+641517	Gilberto Alves	mentira/bonitao	C16	Vinil	
+641518	Carlos Galhardo	aniversario de casamento/Feliz natal	C16	Vinil	
+641519			C16	Vinil	
+641520	Araci de Almeida	Feitiço da ..../Ultimo desejo	C16	Vinil	
+641521	Angela Maria e João Dias	Não te esqueças/mamae	C16	Vinil	
+641522	Dalva de Oliveira e Roberto Ingleses e sua orquestra 	encontrarei afinal/sem ele	C16	Vinil	
+641523	Sylvio Caldas	nos dois	C16	Vinil	
+641524	Bidú Saijão	La Coheme/Gianni Shacchi	C16	Vinil	
+641525	Imperio Argentina	Trona-triona, antonio vargas 	C16	Vinil	
+641526	Victor young	Logether	C16	Vinil	
+641527	Vanja Orico/Zé do norte 	sodade meu bem, sodade	C16	Vinil	
+641528	Fernando Fernandez	Cabaretera/ a hora que tu me quiseres	C16	Vinil	
+641529	Carlos Gardel	medoreseva/maleaje	C16	Vinil	
+641530	Nelson Gonçalves	amigo/Mulheres de ninguem	C16	Vinil	
+641531	NIlo Sergio 	Canção de aniversario de casamento/Parabens a voce	C16	Vinil	
+641532	4 Ases e um coringa	tentação/colos brancos	C16	Vinil	
+641533	Luiz Gonzaga	Saudades de montão/Brejeiro	C16	Vinil	
+641534	4 Ases e um coringa	Pescador/marcha da fumaça	C16	Vinil	Descartado
+641535	Emilha Borba	Se voce me deixar/a musica que eu não quero ouvir	C16	Vinil	
+641536	Silvio Caldas	Não Chores assim/Pastora dos olhos castanhos	C16	Vinil	
+641537	Silvio Caldas	Cabelos da cor de prata/violoes em funeral	C16	Vinil	Descartado
+641538	Joseph Schimicht	Liritomba/lisetta	C16	Vinil	
+641539	Luiz Gonzaga	Tropeia/ Olha pro ceu	C16	Vinil	
+641540	Juan Daniel	Maria Bonita/ pecado	C16	Vinil	
+641541	Barnabas de Geczy	Luxembrurgo/Vozes da primevera	C16	Vinil	
+641542	Mario de azevedo	A ternura do mar	C16	Vinil	
+641543	Edson Lopes	Singela canção de maria/ mãos ciganas 	C16	Vinil	
+641544	Benianino Gigle	Gorma a Surriento/mattinata	C16	Vinil	
+641545	Quarteto Paraguao	Camparena	C16	Vinil	
+641546	Carlos Augusto	A cançaõ dos meu amores	C16	Vinil	
+641547	Canhotoe seu Regiome	Corridinho	C16	Vinil	Descartado
+641548	Noranly	Quanto tempo faz/ menino grande	C16	Vinil	
+641549	Juan Daniel	Pecadora/ Maria bonita	C16	Vinil	
+641550	Dalva de Oliveira 	Estrelado do mar	C16	Vinil	
+641551	Francisco Alves	Canção da criança/Brasil de amanha 	C16	Vinil	
+641552	Silvio Caldas	Katia/Não	C16	Vinil	
+641553	Custodio Mesquita 	Bamleiro/Gotas de ouro	C16	Vinil	
+641554	Ester de Abreu	Combra é uma lição de amor/outras mulheres	C16	Vinil	
+641555	Dalva de Oliveira e Roberto Inglez	Kalú/fim de comedia	C16	Vinil	
+641556	Carlos Raminez	Frenesí/Cerfidia	C16	Vinil	
+641557	Angela Maria	Fosfaro queimado/sempre fu	C16	Vinil	
+641558	Francisco Canaro	Poema/Milonguita	C16	Vinil	
+641559	Lucile Lederich	Espana carú/El Lelicario	C16	Vinil	
+641560	Zaccarias	Faceira/Setimo ceu	C16	Vinil	
+641561	Raul Weston	I'm in the mood for loree/Blue Moon	C16	Vinil	
+641562	Marek Weler	Sangue,vienense/vinho, Mulher e canto	C16	Vinil	Descartado
+641563	George Melachrino	Kiss me Again/Sleepy Lagoon	C16	Vinil	
+641564	Waldiz Azevedo	Ve se gotas/Delicado	C16	Vinil	
+641565	Francisco Canaro	El Entreroviano/la cumpardita	C16	Vinil	Descartado
+641566	Carlos Gardel	Rosa de outono/La mariposa	C16	Vinil	Descartado
+641567	Silvio Caldas	Sempre Voce	C16	Vinil	Descartado
+641568	Emilha Borba	Paraiba/ baião de dois	C16	Vinil	Descartado
+641569	The Three Suns	JIngles Bells/noite silenciosa	C16	Vinil	Descartado
+641570	Trio Melodia	Marcha do pangu/Marcha do Flamengo	C16	Vinil	
+641571	Francisco Alves	Cinco letras que choram	C16	Vinil	
+641572	Dalva de Oliveira	valsa a grande verdade/ esta noite serenou	C16	Vinil	Descartado
+641573	Rago	Jamais te esquecerei/Mentiroso	C16	Vinil	
+641574	Silvio Caldas	Nunca soubeste	C16	Vinil	
+641575	Araci de Almeida	Palpitenngeliz/Momeosa de botoquim	C16	Vinil	
+641576	Frank Betty Trio	Marchetal at sundown	C16	Vinil	
+641577	Silvio Caldas	Falsa felicidade/sorris de minha dor 	C16	Vinil	
+641578	Carmelia alves 	São Joao, meu São João	C16	Vinil	
+641579	Francisco Alves	Amanda mici	C16	Vinil	
+641580	Alfredo de Angelis	Madre l cumpadre 	C16	Vinil	
+641581	Carlo Buti	Serena delsamarelo	C16	Vinil	
+641582	Francisco Carlos 	Confissão/alma dos Violinos	C16	Vinil	Descartado
+641583	Jorge Goulart, trio madrigal e trio melodia	Dominó/reefugio	C16	Vinil	
+641584	Linda Baptista	Dona Direergencia/Vingança	C16	Vinil	
+641585	Roberto Ingleses	Canção de Dalila	C16	Vinil	
+641586	Francisco Alves	pra que sofrer/macaco que baba 	C16	Vinil	
+641587	Peter Kreuder	Sucessos Mundiais part 1 e 2 	C16	Vinil	
+641588	Francisco Canaro	Sin Falavras/quando estemos lejos	C16	Vinil	
+641589	The Philarmonica	zardas slepy  time gal	C16	Vinil	
+641590	Mario de azevedo	Do Sorriso das mulheres nasceram as flores	C16	Vinil	
+641591	Nelson Gonçalves	De abraços com outro	C16	Vinil	
+641591 A	Xavier Cugat	JOca Flusion/ pa-lan-pan-lan	P49	Vinil	
+641591 B	Charles Frenet	MonilmontantTout me Sourit	P49	Vinil	
+641591 C	Xavier Cugat	Numa ilha com Voce	P49	Vinil	
+641591 D	Roberto Inglez e sua Orquestra	Aerenata/Noturno	P49	Vinil	
+641591 E	Roberto Inglez e sua orquestra	La Paloma/o criador de melodias	P49	Vinil	
+641591 F	Roberto Inglez e sua orquestra	Anda Lucia/Laura	P49	Vinil	
+641591 G	Roberto Inglez e sua orquestra	Nasá para Bailar/me vida	P49	Vinil	
+641591 H	Roberto Inglez e sua orquestra	Mambo Jambo/meu coração solo	P49	Vinil	
+641591 I	Roberto Inglez e sua orquestra	canção de danila/as folhas mortas	P49	Vinil	
+641591 J	Roberto Inglez e sua orquestra	Alerazame ase/Lagrimas de sangue	P49	Vinil	
+641592 A	Banda de canecão	100 anos de carnaval parte 1 e 2 	P50	Vinil	
+641592 B	Banda de canecão	100 anos de carnaval parte 1 e 2	P50	Vinil	
+641592 C	Banda de canecão	100 anos de carnaval parte 1 e 2	P50	Vinil	
+641593 A	Waldiz Azevedo	Cinco malucos/ o que é que há	P51	Vinil	
+641593 B	Mario Gennarci Filho e Garoto		P51	Vinil	
+641593 C	Garoto	Kalú/malaricole	P51	Vinil	
+641593 D	Abel Ferreira	Sururú no galinheiro/Haroldo no choro	P51	Vinil	
+641593 E	Gaya e sua orquestra	Celia- valsa/ So celo amor vale a vida	P51	Vinil	
+641593 F	Jacob	Teu beijo-choro chroro de varanda	P51	Vinil	
+641592	Andreus Sisters	Well All Right	C16	Vinil	
+641593	Silvio Caldas	Ausencia/Meus 20 anos 	C16	Vinil	
+641594	Garoto	Bailão Cagula/perigoso	C16	Vinil	
+641595	Carmem Carvalho	Intermezzo/ Concerto N1	C16	Vinil	Descartado
+641596	Francisco Alves	Tristeza Marina/Frenese	C16	Vinil	Descartado
+641597	Pedroca	Bailão em Cuba/Meu sonho	C16	Vinil	Descartado
+641598	Perez Frado e sua orquestra 	Al cama Del mambo/mambo de chatanooga	C16	Vinil	Descartado
+641599	Francisco Alves 	Jalousi (cume) valsa da despedida 	C16	Vinil	Descartado
+641600	Dircinha Batista 	Canta de lança / nunca	C16	Vinil	Descartado
+641601	Silvio Caldas	Algodão- Samba/ Noturno no tempo de samba 	C16	Vinil	Descartado
+641602	Nelson Eddy	Ah! sweet my tery of life	C16	Vinil	Descartado
+641603	Paul Weston	Swedish Shapsody/ Full moon and Emptez arms	C16	Vinil	Descartado
+641604	Marlene	Dona Vera tricotando/nego/meu amor	C16	Vinil	Descartado
+641605	Irmas Castro	Moreninho LIndo/aventureira	C16	Vinil	Descartado
+641606	Mantovani Alleurne 	serenata/tango delle rose	C16	Vinil	Descartado
+641607	Fernando Alleuorne	Quin de duo/no no no y no	C16	Vinil	Descartado
+641608	Roberto Inglez	In the Chapel of san remo/eladinho	C16	Vinil	Descartado
+641609	Carmen Cavallaro	Tango dell Rose Cirileirilein	C16	Vinil	
+641610	Artie Shaw	Marinela/i coreir the waterfront	C16	Vinil	Descartado
+641611	Al Galladoro	Jalousie/Czardas	C16	Vinil	Descartado
+641612	Roberto Inglez	Coimbera/Always you	C16	Vinil	Descartado
+641613	Peter Treuder	Pecadora/princesita	C16	Vinil	
+641614	Pepe Avila	Amariré/lageumas y recueidos	C16	Vinil	
+641615	Angelo Reale	Barcária/Arrogante 	C16	Vinil	
+641616	Xavier Cugat	Adtos- rumba/green eys	C16	Vinil	
+641617	Romeu Tere	Morena, Morena/quem sabe?	C16	Vinil	Descartado
+641618	Isaura Garcia	Represalia/bailão no bras	C16	Vinil	
+641619	Fernando Alleuorne	Bolero/passo a passo	C16	Vinil	
+641620	Ortiz Guerreiro	India	C16	Vinil	
+641621	Trio Marabá	Rileira/ minha historia	C16	Vinil	
+641622	Gregorio Barrios	Palida cancion/todo se acaba 	C16	Vinil	
+641623	Peter Kreuder	Spielt for unsure kceinen parte 1 e parte 2	C16	Vinil	
+641624	Trio Cristal	Nuestro juramento/Curuzuverá	C16	Vinil	Descartado
+641625	Gregorio Barrios	Hipocrita/clopin-ocepant	C16	Vinil	
+641626	Trio los panchos	Caminemos/contigo	C16	Vinil	
+641627	Raul Mota 	Ay! cosita linda/eh! mia bella napoli	C16	Vinil	
+641628			C16	Vinil	Descartado
+641629			C16	Vinil	Descartado
+641630			C16	Vinil	Descartado
+641631			C16	Vinil	Descartado
+641632			C16	Vinil	Descartado
+641633			C16	Vinil	Descartado
+641634			C16	Vinil	Descartado
+641635			C16	Vinil	
+641636			C16	Vinil	
+641637			C16	Vinil	
+641638			C16	Vinil	
+641639			C16	Vinil	Descartado
+641640			C16	Vinil	Descartado
+641641			C16	Vinil	Descartado
+641642			C16	Vinil	Descartado
+641643			C16	Vinil	Descartado
+641644			C16	Vinil	Descartado
+641645	Luiz Bonfa e seu conjunto	Faboleno/o ceu mandar	C16	Vinil	Descartado
+641646	Curliz Hecka	Larotita/el choclo	C16	Vinil	Descartado
+641647	Ewin Wiener	Ninguem me ama/não tem solução	C16	Vinil	Descartado
+641648	Muranc	A mulata é a tal/tengatona fuba	C16	Vinil	Descartado
+641649	Trigemeos vocalistas	Fica juntinho/couna	C16	Vinil	Descartado
+641650	Dou Guaruja	Ringara/ a que se foi	C16	Vinil	Descartado
+641651	Dou Guaruja	eu/saleia	C16	Vinil	Descartado
+641652	Ray Ellis	Dumpy The sheik	C16	Vinil	
+641653	Lecuona Cuban Boys	Lumba Brasil/Cubanacan	C10	Vinil	
+641654	Edith pepiga	faz-me rir	C10	Vinil	
+641655	Corolla Jureentude de Viena	O du Frohliche.o du Selige	C10	Vinil	
+641656	Edith Pepiga	Faz me rir/nerrer on suday	C10	Vinil	Descartado
+641657	Hermanos Padilha	No me tengas lastima/la jacalera	C10	Vinil	Descartado
+641658	Orquestra Tipica Iwgoslareia	Soibre as ondas/estudantina	C10	Vinil	Descartado
+641659	Fernando Allberne 	uma Noche de Mayo?adios...adios	C10	Vinil	Descartado
+641660	Fernando Fernandez	El Airoplano/ que me duras corazon	C10	Vinil	
+641661	Altamiro Carrilho e sua bandinha	Saudade de Padua/rio antigo	C10	Vinil	
+641662	Charlie Kunz	Charlie Kunz	C10	Vinil	Descartado
+641663	Carmelia Alvez	Saleia na Gaiola/dança do cinote	C10	Vinil	Descartado
+641664	Bandilha do Guedes	Bandilha do Guedes/Primavera	C10	Vinil	
+641665	Trio de Ouro	Luiz da Ribalta/Maria loura	C10	Vinil	
+641666	Fernando Fernandez	yo creo en ti hipocrita	C10	Vinil	
+641667	Fernando Allberne 	Dices Que Tengo celos/que raro es mi Amor	C10	Vinil	
+641668	Roberto Inglez	Tres. palaleras/ rio de janeiro	C10	Vinil	
+641669	Juan p Arienzo	Donjuan	C10	Vinil	
+641670	Euclides da cunha	Acordei Cansdo/o tempo passa	C10	Vinil	Descartado
+641671	Mario Zan	Aurora/Dançando no fogo	C10	Vinil	Descartado
+641672	Ethel Smith	Ethel Smith	C10	Vinil	
+641673	Poly e seu conjunto 	Benfica/fel	C10	Vinil	Descartado
+641674	Eheira hios	Pecadora/ sera por eso	C10	Vinil	Descartado
+641675	LIbertad Lamarque	Nono/sentimento Gaucho	C10	Vinil	
+641676	Tito Guizar	Mioracion/noche azul	C10	Vinil	Descartado
+641677	Lulu Melo	Fiza cama na varanda 	C10	Vinil	
+641678	Nestor Chayres	Asi/Tengo celos	C10	Vinil	Descartado
+641679	Toney Murena	Ballerine/Again	C10	Vinil	Descartado
+641680	Augustin Larramenda	Mebocaya Lati/Freoti 	C10	Vinil	Descartado
+641681	Rago e Seu Conjunto	Minha homenagem	C10	Vinil	
+641682	LInda Rodrihues	Historia de uma Brasileira lama/nossos caminhos	C10	Vinil	
+641683	Solo Salles	Bulo Horizonte 	C10	Vinil	
+641684	Francisco Canaro	La lavada/ La cara de la luna	C10	Vinil	
+641685	Enrique Rodrigues	Canao em paris 	C10	Vinil	
+641686	Felirc Perez cardozo	Rodrigues pona/la cumparsita	C10	Vinil	
+641687	Wiener Melodion			Vinil	
+641688	Walter Baumgartner	 	C10	Vinil	
+641689	Alfredo Grossi e sua Tipica	Nada dor da auxencia do teu amor	C10	Vinil	
+641690	Martha Mendonça	Lu Sales / volta meu amor	C10	Vinil	
+641691	Emilinha Borba	Bate o Bumbo tomara que chôva	C10	Vinil	
+641692	Alcides Gerardi	Standard parte 1 e 2		Vinil	
+641693	Jodel doppelquartett frauenfeld	Naturjodel nut alphorn	C10	Vinil	
+641694	Carolina Cardoso de Meneses	Aurora Helena	C10	Vinil	
+641695	Vagalumes do luar	Maria boa / canção	C10	Vinil	
+641696	Jerry Thomas	Dance with Dolly	C10	Vinil	
+641697	Mario Gennari Filho	Saudade da Bahia	C10	Vinil	
+641698	Pepe Carrera	Pedras Brancas	C10	Vinil	
+641699	Rosita Serrano	Rio Abajo/ Babalu	C10	Vinil	
+641700	Osvaldo Norton	Naná	C10	Vinil	
+641701	Paschoal Mellilo	Cuco/ Ciganinha	C10	Vinil	
+641702	Ken Griffin	Ebb Tide 1 e 2	C10	Vinil	
+641703	Mario Zan 	Silveino Rodrigues/ gostoso	C10	Vinil	
+641704	Fernando Albuerne	Pastora/ Cariñito	C10	Vinil	
+641705	Hermanas Padilla	juzgan mi vida/ Carita de virgen	C10	Vinil	
+641706	Trio Calendario Nhú	Farra Carapê	C10	Vinil	
+641707	Francisco Alves	Aquarela do Brasil	C10	Vinil	
+641708	Tomas Castro	Beijinho doce/ faz um ano	C10	Vinil	
+641709	Heleninha Costa	Paixão Serenata/ Por quanto tempo?	C10	Vinil	
+641710	Norton Gould	Tropical	C10	Vinil	
+641711	Francisco Alves	Vem meu amor	C10	Vinil	
+641712	Daniel Azulay	Daniel Azulay	C18	Vinil	
+641713	The Beatles	Hey Jude/ Revolution		Vinil	
+641714	Menino do Rio	Garota dourada/ de repente Califórnia	C18	Vinil	
+641715	A Ginastica Modeladora de Nova	A Ginastica Modeladora de Nova	C18	Vinil	
+641716	Ary Toledo	Tiradentes/ Pau de Arara	C18	Vinil	
+641717	The Elton John Band	I saw her standing there/ Philadelphia Freedom	C18	Vinil	
+641718	Johnny Morthis	Johnny Morthis 	C18	Vinil	
+641719	Kelly	Kelly	C18	Vinil	
+641720	Vinicius Cantuária	Vinicius Cantuária	C18	Vinil	
+641721	Chapeuzinho Vermelho	Chapeuzinho Vermelho Parte 1 e 2	C18	Vinil	
+641722	Estorinhas de Walt Disney	Marry Poppins Part 1 e 2	C18	Vinil	
+641723	Estorinhas de Walt Disney	Branca de Neve Parte 1 e 2	C18	Vinil	
+641724	Estorinhas de Walt Disney	A roupa nova do imperador Parte 1 e 2	C18	Vinil	
+641725	João e Maria 	João e Maria Parte 1 e 2	C18	Vinil	
+641726	The Beatles	The Beatles	C18	Vinil	
+641727	Lá vem o Totó	O cachorrinho de brinquedo da Mina Parte 1 e 2	C18	Vinil	
+641728	Anarchic System	See me Hear me/ Love, oh my	C18	Vinil	
+641729	Abílio Manuel 	Pena Perde/ Moça Bonita	C18	Vinil	
+641730			C18	Vinil	
+641731	Coral Edypane	Ainoda Colegio Sec. XII/ Oração da Paz	C18	Vinil	
+641732	Paul McCartney and Wings	Sally 6/ Juniors Form	C18	Vinil	
+641733	Nelson Gonsalves	Nelson Gonsalves	C18	Vinil	
+641734	Enzo Parise	Joanna/ E la Mazza		Vinil	
+641735	Hinos Brasileiros	Hino Bandeira/ Hino da Proclamação da República	C18	Vinil	
+641736	Geraldo Vandré	Caminhando/ Descordenar	C18	Vinil	
+641737	The Joe Jeffrey Gray	My Pledge of love/ Margie	C18	Vinil	
+641738	Giovanelli	Sonho Azul Parte 1 e 2	C18	Vinil	
+641739	Holando Balderin	Eu a viola e Deus		Vinil	
+641740	The Mama's e The papa's	Dedicated to the one I love	C18	Vinil	
+641741	Batista Junior	Forró com Samba/ Diploma de Lua	C18	Vinil	
+641742	The Flirtations	Earthquakes	C18	Vinil	
+641743	Erasmo Carlos	Erasmo Carlos	C18	Vinil	
+641744		A velha de Baixo da cama/ Como demorou	C18	Vinil	
+641745	Povos e Países, mundo Árabe	Povos e Países, mundo Árabe	C18	Vinil	
+641746	Povos e Países, mundo Árabe	Povos e Países, mundo Árabe	C18	Vinil	
+641747	Marina	Nosso estranho amor/ doce vida	C18	Vinil	
+641748	Os originais do samba	Domingo da Rosa/ Cadê Teresa	C18	Vinil	
+641749	Dóris Monteiro	Hei você mais um adeus/ É isso aí/ Mundo pequeno	C18	Vinil	
+641750	2+2	Linha do Horizonte	C18	Vinil	
+641751	TV disco	TV disco	C18	Vinil	
+641752	April Stevens	Teach me Tiger/ Morning Light/ Midnight	C18	Vinil	
+641753	Paul McCartney	check my nachine/ Waterfalls	C18	Vinil	
+641754	Wess e Dori Ghezzi	Tercas/ Noi due per simpore	C18	Vinil	
+641755	Boca Nervosa	Conta do Aboreu	C18	Vinil	
+641756	Samba 6	Em boca fechada não entra mosca/ A musa	C18	Vinil	
+641757	Junior	Thee snate/ Excuse me 	C18	Vinil	
+641758	Quatro	Quatro	C18	Vinil	
+641759	Povos e países França	Povos e países França	C18	Vinil	
+641760	Caetano Veloso	Meu bem meu mal/ Festa do interior	C18	Vinil	
+641761	The Beatles	Day tripper/ we can work it out	C18	Vinil	
+641762	Grupo Cravo e Canela	Tereza Raquel		Vinil	
+641763	Shatom	Canção da Amizade parte 1 e 2	C18	Vinil	
+641764	Blitz	Você não soube me amar	C18	Vinil	
+641765	The Beatles	Strawberry fields forever/ Penny Lane	C18	Vinil	
+641766	Apple	Don't let me down/ Get Back	C18	Vinil	
+641767	The Beatles	Help	C18	Vinil	
+641768	The Beatles	Rain/ Paperback writer	C18	Vinil	
+641769	Povos e Países Rep. Platinas	Rep. Platinas	C18	Vinil	
+641770	The Beatles 	All you need is love/ Baby, you're a rich man	C18	Vinil	
+641771	Povos e Países México	Povos e Países México	C18	Vinil	
+641772	The Jimmy Castor Bunch	The Betha Butt Boogie Parte 1 e 2	C18	Vinil	
+641773	Cristina	Quantas Lágrimas/ Nome sagrado	C18	Vinil	
+641774	The Beatles	The Beatles	C18	Vinil	
+641775	The Beatles com Tony	The Beatles com Tony Sheridan	C18	Vinil	
+641776	Vamos falar com Deus	Vamos falar com Deus	C18	Vinil	
+641777	Wando	Coisa Cristalina/ Cara	C18	Vinil	
+641778	Magazine	Sou boy/ Kid vinil	C18	Vinil	
+641779	Povos e Países Portugal	Povos e Países Portugal	C18	Vinil	
+641780	Povos e Países Rep. Andinas	Povos e Países Rep. Andinas	C18	Vinil	
+641781	Povos e Países Alemanha	Povos e Países Alemanha	C18	Vinil	
+641782	Povos e Países África Tropical	Povos e Países África Tropical	C18	Vinil	
+641783	Povos e Países Israel	Povos e Países Israel	C18	Vinil	
+641784	Povos e Países Europa Ocidental	Povos e Países Europa Ocidental	C18	Vinil	
+641785	Povos e Países Grã-Bretanha	Povos e Países Grã-Bretanha	C18	Vinil	
+641786	Giovanelli	Sonho Azul	C18	Vinil	
+641787	Povos e Países Japão	Povos e Países Japão	C18	Vinil	
+641788	Povos e Países Itália	Povos e Países Itália	C18	Vinil	
+641789	Povos e Países India	Povos e Países India	C18	Vinil	
+641790	Povos e Países Grécia	Povos e Países Grécia	C18	Vinil	
+641791	Abílio Manoel	Abílio Manoel	C18	Vinil	
+641792	Johan Douglas Frish	Luar do Sertão/ Marcha Nupcial	C18	Vinil	
+641793	Pussycat	Mississipi	C18	Vinil	
+641794	Tokyo	Mão direita/ Humanos	C18	Vinil	
+641795	Zé Breguete	Zé Breguete	C18	Vinil	
+641796	Povos e Países Escandinavia	Povos e Países Escandinavia	C18	Vinil	
+641797	Povos e Países Brasil	Povos e Países Brasil	C18	Vinil	
+641798	Povos e Países Balcãs	Povos e Países Balcãs	C18	Vinil	
+641799	Povos e Países China	Povos e Países China	C18	Vinil	
+641800	Povos e Países União Soviética	Povos e Países União Soviética	C18	Vinil	
+641801	Povos e Países África do Sul	Povos e Países África do Sul	C18	Vinil	
+641802	Povos e Países Austrália Nova Zelândia	Povos e Países Austrália Nova Zelândia	C18	Vinil	
+641803	Povos e Países Antilhas	Povos e Países Antilhas	C18	Vinil	
+641804	Povos e Países Suíça	Povos e Países Suíça	C18	Vinil	
+641805	Povos e Países Colômbia Venezuela e Guianas	Povos e Países Colômbia Venezuela e Guianas	C18	Vinil	
+641806K	Povos e Países Holanda	Povos e Países Holanda	C18	Vinil	
+641807L	Povos e Países Países Baixos	Povos e Países Países Baixos	C18	Vinil	
+641808M	Povos e Países Turquia	Povos e Países Turquia	C18	Vinil	
+641809N	Povos e Países América Central	Povos e Países América Central	C18	Vinil	
+641810O	Povos e Países Canadá	Povos e Países Canadá	C18	Vinil	
+641811P	Povos e Países Sudeste Asiático	Povos e Países Sudeste Asiático	C18	Vinil	
+641812A	Povos e Países China	Povos e Países China	C18	Vinil	
+641813B	Povos e Países América Central	Povos e Países América Central	C18	Vinil	
+641814C	Povos e Países Suíça	Povos e Países Suíça	C18	Vinil	
+641815D	Povos e Países Colômbia Venezuela e Guianas	Povos e Países Colômbia Venezuela e Guianas	C18	Vinil	
+641816E	Povos e Países Balcãs	Povos e Países Balcãs	C18	Vinil	
+641817F	Povos e Países Austrália Nova Zelândia	Povos e Países Austrália Nova Zelândia	C18	Vinil	
+641818G	Povos e Países Antilhas	Povos e Países Antilhas	C18	Vinil	
+641819H	Povos e Países Holanda	Povos e Países Holanda	C18	Vinil	
+641820I	Povos e Países Países Baixos	Povos e Países Países Baixos	C18	Vinil	
+641821J	Povos e Países África do Sul	Povos e Países África do Sul	C18	Vinil	
+641822K	Povos e Países Escandinávia	Povos e Países Escandinávia	C18	Vinil	
+641823L	Povos e Países Brasil	Povos e Países Brasil	C18	Vinil	
+641824M	Povos e Países União Soviética	Povos e Países União Soviética	C18	Vinil	
+641825N	Povos e Países Sudeste Asiático	Povos e Países Sudeste Asiático	C18	Vinil	
+641826A	Povos e Países Estados Unidos	Povos e Países Estados Unidos	C18	Vinil	
+641827B	Povos e Países Grã-Bretanha	Povos e Países Grã-Bretanha	C18	Vinil	
+641828C	Povos e Países Itália	Povos e Países Itália	C18	Vinil	
+641829D	Povos e Países Grécia	Povos e Países Grécia	C18	Vinil	
+641829E	Povos e Países Japão	Povos e Países Japão	C18	Vinil	
+641830F	Povos e países França	Povos e países França	C18	Vinil	
+641631G	Povos e países Árabe	Povos e países Árabe	C18	Vinil	
+641432H	Povos e países México	Povos e países México	C18	Vinil	
+641233I	Povos e países Espanha	Povos e países Espanha	C18	Vinil	
+641034J	Povos e Países India	Povos e Países India	C18	Vinil	
+640835K	Povos e Países Rep. Andinas	Povos e Países Rep. Andinas	C18	Vinil	
+640636L	Povos e Países Alemanha	Povos e Países Rep. Alemanha	C18	Vinil	
+640437M	Povos e Países África Tropical	Povos e Países África Tropical	C18	Vinil	
+640238N	Povos e Países Israel	Povos e Países Israel	C18	Vinil	
+640039O	Povos e Países Europa Oriental	Povos e Países Europa Oriental	C18	Vinil	
+641840P	Povos e Países África do Sul	Povos e Países África do Sul	C18	Vinil	
+641841Q	Povos e Países República Platina	Povos e Países República Platina	C18	Vinil	
+641842R	Povos e Países China	Povos e Países China	C18	Vinil	
+641904A	La musica strumentale fora il 1600 e il 1900	Storia della musica	C18	Vinil	
+641905B	La Fuga	Storia della musica	C18	Vinil	
+641906C	L' Maestri Liutai	Storia della musica	C18	Vinil	
+641907D	Il Cannonne Il Paganni	Storia della musica	C18	Vinil	
+641908E	Arcagelo Corelli	Storia della musica	C18	Vinil	
+641909F	Antonio Vivaldi	Storia della musica	C18	Vinil	
+641910G	La musica Vindinistica	Storia della musica	C18	Vinil	
+641911H	Alessndro e Domenico Scarlatti	Storia della musica	C18	Vinil	
+641912I	La scuola Francese	Storia della musica	C18	Vinil	
+641913J	Il corale Luterano	Storia della musica	C18	Vinil	
+641914K	G. S. Bach	Storia della musica	C18	Vinil	
+641915L	Bach: L'opera Organistica	Storia della musica	C18	Vinil	
+641916M	Bach: la musica vocale e storumentale	Storia della musica	C18	Vinil	
+641917N	G. S. Bach:Le Passionie Gli oratori	Storia della musica	C18	Vinil	
+641918O	G. F. Handel: Il "Messia"	Storia della musica	C18	Vinil	
+641919	Deodato	Happy Hour	C19	Vinil	1982
+641920	Coletania	Viagem com o excelsio a máquina do som	C19	Vinil	1975
+641921	Carpenters	Just hits	C19	Vinil	1982
+641922	Heart Break	Shalama	C19	Vinil	1985
+641923	Cordas	Os grandes sucessos do Cinema	C19	Vinil	
+641924	Gerry Mulligan	gigantes do Jazz	C19	Vinil	1980
+641925	Sylvester	Fantasy	C19	Vinil	1978
+641926	Coletania	Maralade	C19	Vinil	1982
+641927	Girls	General Caine	C19	Vinil	1982
+64.1928	Coletânea	The Capitol Show	C19	Vinil	1976
+64.1929	Boney M. 	Oceans of fantasy	C19	Vinil	1979
+64.1930	Rubisteen	Variações Sinfônicas	C19	Vinil	1661
+64.1931	Stereo	Miuratona hora no stage vol. 4	C19	Vinil	1702
+64.1932	Coletânea	Os Paralamas do Sucesso	C19	Vinil	1984
+64.1933	K-tel	Dynamite	C19	Vinil	1976
+64.1934	Tom Johnston	The Captain and me the madic Brothes	C19	Vinil	1973
+64.1935	Coletânea	Big Bang	C19	Vinil	1989
+64.1936	Johann Strauss	Strauss Waltzes		Vinil	1970
+64.1937	Simone	Cristal		Vinil	1985
+64.1938	Coletânea	Música Popular Brasileira		Vinil	1976
+64.1939	Ivan Davis	Grandes Temas de Concertos Românticos para Piano		Vinil	1977
+64.1940	Hanson and Davis	I'll take you on Hungry for you love i told on to yesterday		Vinil	1986
+64.1941	Coletânea	Us top Disco Dance		Vinil	1979
+64.1942	Wea	Beat Staeet		Vinil	1984
+64.1943	Coletânea	Aran Onga		Vinil	1983
+64.1944	Ricardo Cocciente	Partido Alto		Vinil	1984
+64.1945	Journey	Yakteno alto		Vinil	1988
+64.1946	Johnny Revers	Gratitude		Vinil	1969
+64.1947	Mary Jane Girls	Mary Jone Girls		Vinil	
+64.1948	The Sugarhill Gang	The Sugarhill Gang		Vinil	
+64.1949	Samantha Sang	Samantha Sang		Vinil	
+64.1950	Missa e Credo	Missa e Credo		Vinil	
+64.1951	Ayndi Laypep	Ayndi Laypep		Vinil	
+64.1952	The Jachesons	The Jachesons		Vinil	
+64.1953	Star Dust	Star Dust		Vinil	
+64.1954	Fandango / SP	Fandango / SP Documento sonoro do folclore Brasileiro		Vinil	
+64.1955	Durval Souto	Cheira	C21	Vinil	
+64.1956	Vários 	Aguenta Coração		Vinil	1990
+64.1957	Nuno Roland	Meu Destino		Vinil	
+64.1958	Vários 	Cantigas de São João		Vinil	
+64.1959	Vários 	A Y De Mi		Vinil	
+64.1960	Vários 	Carinhoso		Vinil	1973
+64.1961	Les Swingle singers e o barroco	Baldineri		Vinil	
+64.1962	É isso ai Jair Rodrigues e vários	Minha escola		Vinil	1971
+64.1963	Jair Rodrigues	Disparada		Vinil	1970
+64.1964	Sérgio Reis	Filho adotivo		Vinil	1982
+64.1965	Os Demônios da Garoa e Adoniram Barbosa	Trem das Onze		Vinil	1974
+64.1966	Paulo Sérgio	Pelo amor de Deis		Vinil	1973
+64.1967	Chico Buarque	A Banda		Vinil	1969
+64.1968	Elizeth Cardoso	Mulata Assanhada		Vinil	1968
+64.1969	Baden Powell à vontade	Garota de Ipanema		Vinil	1967
+64.1970	Jhon Lennon	Give Peace Chance		Vinil	1969
+64.1971	SérgioReis Pantaneiro	Peão de boiadeiro		Vinil	1990
+64.1972	O melhor de Sérgio Reis as mais belas	O menino da porteira		Vinil	1982
+64.1973	Valsas sertanejas	Raio de sol		Vinil	
+64.1974	Os Saraus de Jacob	Brejeiro		Vinil	1971
+64.1975	Grandes autores	Folha morta		Vinil	1978
+64.1976	Clara Nunes	Morena de Angola		Vinil	1995
+64.1977	Jamelão	Meu pecado		Vinil	1972
+64.1978	Elizeth Cardoso encontro com	Noites carioca		Vinil	1968
+64.1979	Dorival Caymmi	Cantigas de São João		Vinil	1969
+64.1980	A música de Donga	Amigo do povo		Vinil	1974
+64.1981	Cartola	Disfarça e chora		Vinil	1974
+64.1982	Vinícius de Moraes	Serenata do adeus		Vinil	
+64.1983	O Botequim 	Quem sabe mais		Vinil	1973
+64.1984	Rainha da Sucata	Into my life		Vinil	1990
+64.1985	Época de ouro	Capricho do destino		Vinil	1969
+64.1986	Edu da Gaita da cor do pecado	Primeiro amor		Vinil	
+64.1987	Maria Cleusa	Faz parte do meu show		Vinil	1989
+64.1988	Grandes intérpretes	Bodas de prata		Vinil	1984
+64.1989	Elizeth Cardoso	Abertura		Vinil	1968
+64.1990	A arte de Pavarotti	Quanto é bella		Vinil	1968
+64.1991	Marina fatal	Uma noite 1/2		Vinil	1994
+64.1992	Como dizia o poeta	Tarde em Itapoam		Vinil	1971
+64.1993	Caetano e Chico	Bom conselho		Vinil	1972
+64.1994	Neide Whestting	Muscle of love		Vinil	
+64.1995	Dolores Duran	Que murmurem		Vinil	
+64.1996	Um piano ao cair da tarde	Folha morta		Vinil	1978
+64.1997	Emili Santiago	Aquarela brasileira		Vinil	
+64.1998	Altamiro	Primeiro amor		Vinil	1977
+64.1999	Alucinações Belchior	Apenas um rapazlatino americano		Vinil	
+64.2000	Angela Maria	João Valentão		Vinil	
+64.2001	Luís Vieiria	Chá pra lumbriga		Vinil	1986
+64.2002	Pixinguinha	Diplomata		Vinil	1975
+64.2003	Chiquinha Gonzaga	Atraente		Vinil	
+64.2004	Roberto Carlos	Você é minha bebê		Vinil	1992
+64.2005	Hermeto Paschoal			Vinil	1973
+64.2006	The kids from fame	Starmaker		Vinil	1983
+64.2007	Orlando Silva	Caronhoso		Vinil	1978
+64.2008	Francisco Alves e suas versõe	Rosa vermelha		Vinil	
+64.2009	Ary Barroso	Na batucada da vida 		Vinil	1977
+64.2010	Marcus Pereira	Na glória		Vinil	1974
+64.2011	Evandro do Bandolim	Flor amorosa		Vinil	
+64.2012	Jacob do bandolim	André de sapato novo		Vinil	1975
+64.2013	Os coroas choros imortais	Brasileirinha		Vinil	1984
+64.2014	Dolores Duran	A noite meu bem		Vinil	1972
+64.2015	Atauffo Alves	Ai que saudade da Amélia		Vinil	1970
+64.2016	Herivelto Martins	Caminhemos		Vinil	1977
+64.2017	Baden Powell 	Canto de assanhar		Vinil	1970
+64.2018	The living language couse	English coleção disco 1, 2, 3 e 4		Vinil	
+64.2019	Beniamino Gigli	Panes angélicos		Vinil	
+64.2020	Rigoletta	Cortigiani, vil razza		Vinil	
+64.2021	Trovador	Côro da escola de Milão		Vinil	
+64.2022	L'Arlesienne suite	The halle orchestra		Vinil	
+64.2023	L'Arlesienne suite	The halle orchestra		Vinil	
+64.2024	Albert Sandler	Minuetas		Vinil	
+64.2025	Berliner	Rheinwernlied                                                                         		Vinil	
+64.2026	Mark Andrews	The palms		Vinil	
+64.2027	Coristi del teatro Alta scala milano	Mignan 3986		Vinil	
+64.2028	Mefistofele	Chi del gitano		Vinil	
+64.2029	Santa Lucia	Tita Schipa		Vinil	
+64.2030	Oscar Levantat the piano	Saaco phone solo		Vinil	
+64.2031	Par A. Sandler	Serenade de Joselli		Vinil	
+64.2032	Vlademir Horowiti	1º movimento Allegreta com spirita		Vinil	
+64.2033	Vlademir Horowiti	3º movimentoAlgreta com fuoco		Vinil	
+64.2034	Vlademir Horowiti	2º movimento andantino simalice		Vinil	
+64.2035	1º Festival nacional do choro brasileinho	Vários		Vinil	1977
+64.2036	14 Canzoni di Sanrremo 67	Vários		Vinil	
+64.2037	Una aventura ma Vanidad	Leo Marini		Vinil	
+64.2038	Umbada 	Vários		Vinil	1973
+64.2039	Ivon Curi	Táfartando coisa em mim / É amor		Vinil	
+64.2040	Vários 	Brasil, sax e clarineta		Vinil	1976
+64.2041	Jacob do bandolim e Wladir Azevedo	Série ídolos MPB		Vinil	1974
+64.2042 A	Tony Dallara	Bambina bambina igaul a você		Vinil	
+64.2042 B	Caravelli	Please love me		Vinil	1967
+64.2042 C	Federico garcia Lorca	Poemas e canções		Vinil	1969
+64.2042 D	Vários 	kachturian		Vinil	
+64.2042 E	Vários 	Stereo action unlimited!		Vinil	
+64.2042 F	Vários 	Choro no céu		Vinil	1986
+64.2042 G	Quinteto Villa-lobos	Interpreta		Vinil	1977
+64.2042 H	Francisco Alves	O rei da voz		Vinil	1968
+64.2042 I	Arthur Fiedler orquestra Boston Pops	Sangue viennense		Vinil	
+64.2042 J	Carmen Cavallato	Melodia imortal		Vinil	
+64.2042 K	Dilermando Reis	Gotas de lágrimas		Vinil	1963
+64.2042 L	Johan Dalgas Frisch	O lendário paraíso dos índios		Vinil	
+64.2042 M	Johan Dalgas Frisch	Voes da Amazônia		Vinil	
+64.2042 N	Pablo Neruda	Veinte poemas de amor y una cacion deseperada		Vinil	1968
+64.2042 O	Orqueta Volhsoperj de Vienna the london Philarmonic	Valsas Venenses		Vinil	1978
+64.2043		É Tempo de Forró		Vinil	
+64.2044	RPM	Radiopirata		Vinil	
+64.2045		Top Model		Vinil	
+64.2046		Mulheres de Areia		Vinil	
+64.2047		Hit Parade		Vinil	
+64.2048		O Melhor das Novelas		Vinil	
+64.2049		O Sexo dos Anjos		Vinil	
+64.2050		Donizete		Vinil	
+64.2051		Renato Borghetti		Vinil	
+64.2052		Rua do Samba		Vinil	
+64.2053	Senka Time Blues	The Me Toors		Vinil	
+64.2054		Valsa Divina		Vinil	
+64.2055		Luiz de C. e Denise		Vinil	
+64.2056		Roy Orbison		Vinil	
+64.2057	Angelo Recle	O Famoso Mestre..		Vinil	
+64.2058		Top Model		Vinil	
+64.2059		On Tour in Brazil		Vinil	
+64.2060		On Tour in Brazil		Vinil	
+64.2061		Radiopirata		Vinil	
+64.2062		USA for Africa		Vinil	
+64.2063		Lafoyette		Vinil	
+64.2064	Xuxa	Xou da Xuxa		Vinil	
+64.2065		Recuerdos Del..		Vinil	
+64.2066		The Heavey Way		Vinil	
+64.2067		Os Grandes Sambas		Vinil	
+64.2068		Aroty Tropeiro		Vinil	
+64.2069		Carroussell		Vinil	
+64.2070		Best in Brazil		Vinil	
+64.2071	Johnny Rivers	Whisky A Go Go		Vinil	
+64.2072	Elton John	Caribou		Vinil	
+64.2073		A Banda Chegou		Vinil	
+64.2074	Vilmar Romero	Roda de Chimarrão		Vinil	
+64.2075		Chorinhos e Chorões		Vinil	
+64.2076	Caçula e Marinheiro	Cantinho do Céu		Vinil	
+64.2077	Dalvan	Desencontros		Vinil	
+64.2078		Sambas de Enredo		Vinil	
+64.2079	Clemilda	Prenda o Tadeu		Vinil	
+64.2080	Tata e Escova	Perdidos no Disco		Vinil	
+64.2081	India Anay	As Pastorinhas		Vinil	
+64.2082	Lindomar Castilho			Vinil	
+64.2083	Betty Whight	Mother Wit		Vinil	
+64.2084		O Salvador da Pátria		Vinil	
+64.2085		Sertanejo 86		Vinil	
+64.2086		Barriga de Aluguel		Vinil	
+64.2087		Greatest Hits		Vinil	
+64.2088	João Bosco	Bosco		Vinil	
+64.2089	Roberto Beto	Excelsior		Vinil	
+64.2090		Chucho Jamas		Vinil	
+64.2091	Tim Maia			Vinil	
+64.2092		Violinos Flutuan		Vinil	
+64.2093	Frei Gregório	E Sua Coleção		Vinil	
+64.2094	Xuxa	Xegundo Xou da Xuxa		Vinil	
+64.2095	Xuxa	4º Xou da Xuxa		Vinil	
+64.2096		Avec Monsuer		Vinil	
+64.2097	Bul Haley	Rock Espetacular		Vinil	
+64.2098		Mexico		Vinil	
+64.2099	Vanin Lopes	Mexe-Mexe		Vinil	
+64.2100		O Astro		Vinil	
+64.2101		Que Rei Sou Eu		Vinil	
+64.2102		Elas Por Elas		Vinil	
+64.2103	Elis Regina e Jair Rodrigues			Vinil	
+64.2104		Juventude		Vinil	
+64.2105	Jorge Ben	10 Anos Depois		Vinil	
+64.2106		Lobão e os Bonaldos		Vinil	
+64.2107		Hit Parade		Vinil	
+64.2108		Jet Music		Vinil	
+64.2109		O Sonho Não Acabou		Vinil	
+64.2110		Vale Tudo		Vinil	
+64.2111	Manolo Atero	Boleros		Vinil	
+64.2112		Encontro		Vinil	
+64.2113		Agepê		Vinil	
+64.2114		Hits On Fire		Vinil	
+64.2115	Emerson Lore	Trilogy		Vinil	
+64.2116		Emoção em V.A		Vinil	
+64.2117	Xuxa	Xou da Xuxa		Vinil	
+64.2118		Cantando a Tabuada		Vinil	
+64.2119		No Mundo da Criança		Vinil	
+64.2120	Dancing Days			Vinil	
+64.2121		Balão Mágico		Vinil	
+64.2122	Eliana 	Eliana		Vinil	
+64.2123		Corujinhas		Vinil	
+64.2124		Lembranças		Vinil	
+64.2125		Água Viva		Vinil	
+64.2126		O Impacto de Sem		Vinil	
+64.2127		20 Sucessos		Vinil	
+64.2128		Love Dreams		Vinil	
+64.2129		Os Ricos Também		Vinil	
+64.2130		México Canta		Vinil	
+64.2131		Sandra de Sá		Vinil	
+64.2132		Trio Cristal		Vinil	
+64.2133		Vale Tudo		Vinil	
+64.2134	Miguel Aceves	Rancheiras		Vinil	
+64.2135		Música e Elevação		Vinil	
+64.2136		Diana Ross		Vinil	
+64.2137		Sucessos do Cinema		Vinil	
+64.2138		Four Tops Live		Vinil	
+64.2139	Tim Maia	Tim Maia		Vinil	
+64.2140	Julio Cézar	Desperta Brasil		Vinil	
+64.2141		Valsas de Straus		Vinil	
+64.2142		No Balanço...		Vinil	
+64.2143	Luiz Gonzaga	Vou Te Matar de...		Vinil	
+64.2144	Elvis	Elvis		Vinil	
+64.2145	Tim Maia	Tim Maia		Vinil	
+64.2146		Partido EMS		Vinil	
+64.2147	Chitãozinho e Xororó			Vinil	
+64.2148		O Couro Come		Vinil	
+64.2149	Trio Nordestino	O Bicho Bom		Vinil	
+64.2150		Disco Dance		Vinil	
+64.2151	Messias Lima	Forró no Miudinho		Vinil	
+64.2152		Explode Coração		Vinil	
+64.2153		Axé Bahia		Vinil	
+64.2154		Bucho com Bucho		Vinil	
+64.2155	Juventude do Pagode	Magia		Vinil	
+64.2156	Caetano Veloso	Velô		Vinil	
+64.2157	Betinho	Um Sonho		Vinil	
+64.2158	Leo Jaime	Phodas "C"		Vinil	
+64.2159	Roberto S.	Sonho de Amor		Vinil	
+64.2160		O Salvador da Pátria		Vinil	
+64.2161		Secos e Molhados		Vinil	
+64.2162		Seleção Nota 10		Vinil	
+64.2163	Nelson Riddle	101 Strings		Vinil	
+64.2164	John Davis	John Davis		Vinil	
+64.2165		The Art of Con..		Vinil	
+64.2166	Roberto Vanés	Sabrás que te quero		Vinil	
+64.2167		20 Super		Vinil	
+64.2168	Fofão	Doce Caramelo		Vinil	
+64.2169		Gent's		Vinil	
+64.2170		A-Ha "Scoundra"		Vinil	
+64.2171		Um Sonho a Dois		Vinil	
+64.2172		México Caliente		Vinil	
+64.2173	Vivaldi	Grandes Composições		Vinil	
+64.2174		Cidade		Vinil	
+64.2175	Michael Jackson	Thriller		Vinil	
+64.2176		Neicy Nayara		Vinil	
+64.2177		Excelsior A Maqui...		Vinil	
+64.2178	Suzanne Vega	Solitude Standing		Vinil	
+64.2179		Toco House Hits		Vinil	
+64.2180		Flowers		Vinil	
+64.2181		Marina Todas		Vinil	
+64.2182		Mauricio Mattar		Vinil	
+64.2183		Chega Mais...		Vinil	
+64.2184		Maurice Monthier		Vinil	
+64.2185		Murilo de Almeida		Vinil	
+64.2186		Musicamp		Vinil	
+64.2187		"You Gotta Love"		Vinil	
+64.2188	Nando Cordel	Armadilha		Vinil	
+64.2189		Cidades em Torrente		Vinil	
+64.2190		Super Sou Nd...		Vinil	
+64.2191		Invendável		Vinil	
+64.2192	Jelson e Jaime	A Tua Lembrança		Vinil	
+64.2193	Amilton Lelo	Só Vou Amar a Minha		Vinil	
+64.2194		Saramandaia		Vinil	
+64.2195	Agnaldo Timóteo	Os Maiores Sucessos		Vinil	
+64.2196		New York City		Vinil	
+64.2197	Jimmy Cliff	Monster of Reggae		Vinil	
+64.2198	Alcymar Monteiro	Piralampos		Vinil	
+64.2199		Sabor de Amor		Vinil	
+64.2200		Benito de Paula		Vinil	
+64.2201		Só Samba		Vinil	
+64.2202	Almir Guinéto	Jeito de Amar		Vinil	
+64.2203		Radio Pirata Ao Vivo		Vinil	
+64.2204		Roll Jack Roll		Vinil	
+64.2205		20 Sucessos em Órbita		Vinil	
+64.2206		Golden Hits		Vinil	
+64.2207		Sorvete Dançante		Vinil	
+64.2208		Zé Paraíba		Vinil	
+64.2209		Festa Mix		Vinil	
+64.2210		Simone Ao Vivo		Vinil	
+64.2211		Hits Brasil		Vinil	
+64.2212		Live Kenny G.		Vinil	
+64.2213	João Mineiro e Marciano	Os Grandes Sucessos		Vinil	
+         	Artista	Albúm	Local	Obs	Ano
+65.01	Elis Regina	Essa Mulher	C19	Fita K7	
+65.02	Sandy e Junior	Aniversário do Tatu	C19	Fita K7	
+65.03	Bossa Nova	Bossa Nova	C19	Fita K7	35
+65.04	Coletânea	Coletânea	C19	Fita K7	
+65.05	Cesar Camargo Mariano	Cesar Camargo Mariano	C19	Fita K7	
+65.06	Ferro Standard	Ferro Standard	C19	Fita K7	
+65.07	Fantastic Sound	Fantastic Sound	C19	Fita K7	
+65.07	Legião Urbana	Legião Urbana	C19	Fita K7	
+65.08	Jesse	Solidão	C19	Fita K7	
+65.09	Macarena	Hot 97 Vol. 2	C19	Fita K7	97
+65.10	Sinatra	Aman And His Music	C19	Fita K7	
+65.11	Samba Trio	Samba Trio	C19	Fita K7	
+65.12	Ferro Standard	Ferro Standard	C19	Fita K7	
+65.13	Marcello Rossi	Marcello Rossi	C19	Fita K7	
+65.14	Cristina Miranda	Cristina Miranda	C19	Fita K7	
+65.15	Som Livre (?)	Som Livre (?)	C19	Fita K7	
+65.16	Carmila Bruna	Carmila Bruna	C19	Fita K7	
+65.18	Tom Jobim	A Arte	C19	Fita K7	
+65.19	Bailão Sertanejo	Bailão Sertanejo	C19	Fita K7	
+65.20	Noise Reduction	Noise Reduction	C19	Fita K7	
+65.21	Low Noise	Low Noise	C19	Fita K7	
+65.22	Altamiro Carvalho	Antalogia Chorilho	C19	Fita K7	
+65.23	Jovem Pan	As Melhores	C19	Fita K7	
+65.24	Música Americana	Música Americana	C19	Fita K7	
+65.25	Compact Cassette	Compact Cassette	C19	Fita K7	
+65.26	Chico Buarque	Minha História	C19	Fita K7	
+65.27	Yanaretê	Yanaretê	C19	Fita K7	
+65.28	Ofino do Violão	Ofino do Violão	C19	Fita K7	
+65.29	RCA	RCA	C19	Fita K7	
+65.30	Alemão	Cursos de Idioma 1	C19	Fita K7	
+65.31	Gayne Ballet	Khachaturian	C19	Fita K7	
+65.32	Sony	Sony	C19	Fita K7	
+65.33	Ferro Extra	Ferro Extra 1	C19	Fita K7	
+65.34	Sadia 50 anos	Sadia 50 anos	C19	Fita K7	
+65.35	Speak Up	Hot Wheels	C19	Fita K7	
+65.36	K. d. Lang	Country Music	C19	Fita K7	
+65.37	Wallier Kcethy	Wallier Kcethy	C19	Fita K7	
+65.38	Idol	Chamed Life	C19	Fita K7	
+65.39	Dejnarange	Scotch	C19	Fita K7	
+65.40	Robert Maple	New Wave 2	C19	Fita K7	
+65.41	Almir Sater	Almir Sater	C19	Fita K7	
+65.42	Som Livre	Samba da Saudade	C19	Fita K7	
+65.43	Estereo	Estereo	C19	Fita K7	
+65.44	Estereo	Coleção Especial	C19	Fita K7	
+65.45	The Best Of 	The Best Of 	C19	Fita K7	
+65.46	Estereo	Los Tropicanos	C19	Fita K7	
+65.47	Somewhere W Time	Somewhere W Time	C19	Fita K7	
+65.48	Música Para Meditação	Música Para Meditação	C19	Fita K7	
+65.49	Música Portuguesa	Música Portuguesa	C19	Fita K7	
+65.50	Pedrinho Mattar	Pianissimo	C19	Fita K7	
+65.51	Life Styles	Life Styles Vol. 2	C19	Fita K7	
+65.52	Test Heft	M.E. Zen Zertifikat	C19	Fita K7	
+65.53	MPB	MPB	C19	Fita K7	
+65.54	Mel Gibson	Up Spefak	C19	Fita K7	
+65.55	UNIT fina	UNIT fina	C19	Fita K7	
+65.56	RCA	RCA	C19	Fita K7	
+65.57	Themen	Themen 2 new	C19	Fita K7	
+65.58	Themen	Themen 2 new	C19	Fita K7	
+65.59	Quinteto Violado	Quinteto Violado	C19	Fita K7	
+65.60	George Benson	Natallie E. Cant.	C19	Fita K7	
+65.61	Som Livre	A.M. Maraviha Vol. 2 	C19	Fita K7	
+65.62	Estereo	Estereo	C19	Fita K7	
+65.63	EUA Brliar Frita	EUA Brliar Frita	C19	Fita K7	
+65.64	Gino Pesce	A.G. gianini	C19	Fita K7	
+65.65	Curso de Alemão	Curso de Alemão	C19	Fita K7	
+65.66	FEI	Ferro Extra	C19	Fita K7	
+65.67	Estereo	Estereo	C19	Fita K7	
+65.68	Strangers in T nigi	Strangers in T nigi	C19	Fita K7	
+65.69	Alemão	A e B / Alemão	C19	Fita K7	
+65.70	Stereo	Historia A. of music	C19	Fita K7	
+65.71	Música Portuguesa	Música Portuguesa	C19	Fita K7	
+65.72	Scotch	Dynarange	C19	Fita K7	
+65.73	Grupo Violão	Grupo Violão	C19	Fita K7	
+65.74	Elman	Elman	C19	Fita K7	
+65.75	BLS	T. de Engenharia	C19	Fita K7	
+65.76	Festa da Raça	Festa da Raça	C19	Fita K7	
+65.77	Música Portuguesa	Música Portuguesa	C19	Fita K7	
+65.78	BASF	Chromo Extra II	C19	Fita K7	
+65.79	Cara e Coroa	Cara e Coroa	C19	Fita K7	
+65.80	Estereo	Estereo	C19	Fita K7	
+65.81	Estereo	Estereo	C19	Fita K7	
+65.82	John Denver	John Denver	C19	Fita K7	
+65.83	Transamerica	Transamerica	C19	Fita K7	
+65.84	Elizeth Cardoso	Elizeth Cardoso	C19	Fita K7	
+65.85	Duke Ellington	Duke Ellington	C19	Fita K7	1973
+65.86	Seseds	Seseds	C19	Fita K7	
+65.87	Elis Regina	Luz das Estrelas	C19	Fita K7	1951
+65.88	Now	Now	C19	Fita K7	1954
+65.89	Lam Bacha	Lam Bacha	C19	Fita K7	
+65.90	Eva Erlich Gutaz	Eva Erlich Gutaz	C19	Fita K7	
+65.91	Scotch	Dynavange	C19	Fita K7	
+65.92	La Mejor de Chile	La Mejor de Chile	C19	Fita K7	
+65.93	Música Alemã	Música Alemã	C19	Fita K7	
+65.94	Basf	Basf LH-EI 60	C19	Fita K7	
+65.95	Basf	Ferro Extra	C19	Fita K7	
+65.96	Show Jovem	Show Jovem	C19	Fita K7	
+65.97	Kaethy	Samba	C19	Fita K7	
+65.98	Kaethy	Kaethy	C19	Fita K7	
+65.99	M. Labamba	M. Labamba	C19	Fita K7	
+65.100	Alemão	Alemão	C19	Fita K7	
+65.101	Mutantes	Mutantes	C19	Fita K7	
+65.102	Estereo	Estereo	C19	Fita K7	
+65.103	Estereo	Estereo	C19	Fita K7	
+65.104	Pedrinho Mattar	Pedrinho Mattar	C19	Fita K7	
+65.105	33 Boleros Inesqueciveis	33 Boleros Inesqueciveis	C19	Fita K7	
+65.106	Basf	Basf 90	C19	Fita K7	
+65.107	Trauss	Trauss	C19	Fita K7	
+65.108	Stereo	Stereo	C19	Fita K7	
+65.109	New Wave 	New Wave Vol 2 	C19	Fita K7	
+65.110	Rceth	Rceth	C19	Fita K7	
+65.111	Life Styles	Life Styles Vol. 2	C19	Fita K7	
+65.112	Radio	DJ	C19	Fita K7	
+65.113	Chrome Extra	Chrome Extra	C19	Fita K7	
+65.114	Doce Mensagem	Doce Mensagem	C19	Fita K7	
+65.115	Axé	Axé	C19	Fita K7	
+65.116	Walten Kaethy	Walten Kaethy	C19	Fita K7	
+65.117	Djavan	Djavan	C19	Fita K7	
+65.118	Walten Kaethy	Walten Kaethy	C19	Fita K7	
+65.119	Koroas	Conjunto Alegria dos Koroas Vol. 91	C20	Fita K7	
+65.120	Koroas	Conjunto Alegria dos Koroas Vol. 92	C20	Fita K7	
+65.121	Koroas	Conjunto Alegria dos Koroas Vol. 93	C20	Fita K7	
+65.122	Koroas	Conjunto Alegria dos Koroas Vol. 94	C20	Fita K7	
+65.123	Koroas	Conjunto Alegria dos Koroas Vol. 95	C20	Fita K7	
+65.124	Koroas	Conjunto Alegria dos Koroas Vol. 96	C20	Fita K7	
+65.125	Koroas	Conjunto Alegria dos Koroas Vol. 97	C20	Fita K7	
+65.126	Koroas	Conjunto Alegria dos Koroas Vol. 98	C20	Fita K7	
+65.127	Koroas	Conjunto Alegria dos Koroas Vol. 99	C20	Fita K7	
+65.128	Koroas	Conjunto Alegria dos Koroas Vol. 100	C20	Fita K7	
+65.129	Condor Carrisso	Brasil Rural	C19	Fita K7	
+65.130	Beatles	Beatles	C19	Fita K7	
+65.131	Beatles	Beatles	C19	Fita K7	
+65.132			C19	Fita K7	
+65.133	Maria Bethânia	As Canções que Você pra Mim	C19	Fita K7	
+65.134			C19	Fita K7	
+65.135	Best Kamplest	Canções Bacha...	C19	Fita K7	
+65.136	Dedicado a Tei	Tu Sei	C19	Fita K7	1991
+65.137	Elis Regina	O Trem Azul	C19	Fita K7	
+65.138	Mariza Monthi	Billy Vaughn	C19	Fita K7	
+65.139	Freddie Mercury	C'est magnifique	C19	Fita K7	
+65.140	Tria Hakitan	Ramplo 	C19	Fita K7	
+65.141	David Jamb	Sambão Watanabe	C19	Fita K7	
+65.142	Sergio Mendes		C19	Fita K7	
+65.143	Varios		C19	Fita K7	
+65.144	Chico Buarque	Para todo Dia	C19	Fita K7	
+65.145	Maria Creuza	Part 1 e Part 2	C19	Fita K7	
+65.146	Beatles	With the Beatles	C19	Fita K7	1963 a 1964
+65.147	Flash Blood	Strange Days of under Jack	C19	Fita K7	
+65.148	Scala	Confete e Serpentina	C19	Fita K7	1992
+65.149	Emilia Santiago	Aquarela I II V	C19	Fita K7	
+65.150	Paul Martney			Fita K7	
+65.151	Seleção USP	Diversos	C19	Fita K7	
+65.152	S/ informação		C19	Fita K7	
+65.153	Cesar Camargo e Mariano	Suke Ellington	C19	Fita K7	
+65.154	Elizethi Cardoso e vários	Aquarela II	C19	Fita K7	
+65.155	S/ informação			Fita K7	
+65.156	Roberto Carlos	Como vai Você		Fita K7	1972
+66.01	Retrato do Brasil	500 Anos de História e Cultura 1	C20	DVD	
+66.02	Retrato do Brasil	500 Anos de História e Cultura 2	C20	DVD	
+66.03	Retrato do Brasil	500 Anos de História e Cultura 3	C20	DVD	
+66.04	Retrato do Brasil	500 Anos de História e Cultura 4	C20	DVD	
+66.05	Retrato do Brasil	500 Anos de História e Cultura 5	C20	DVD	
+66.06	Retrato do Brasil	500 Anos de História e Cultura 6	C20	DVD	
+66.07	Clone Toy	Clone Toy	C20	DVD	
+66.08	Newton Hiliton	Coisas de Criança	C20	DVD	
+67.01	Dorival Caymmi	Raízes do Samba	C20	DVD	
+67.02	Andrea Bocelli	Romanza	C20	DVD	
+67.03	Parnahyba em Seresta e Serenata	Parnahyba em Seresta e Serenata	C20	DVD	
+67.04	Terras de Sta. Cristina	Momentos 30 anos	C20	DVD	
+67.05	Breno e Caio Cesar	Doideira virou minha cabeça	C20	DVD	
+67.06	Vinho Verde	Momentum 30 anos	C20	DVD	
+67.07	Breno e Caio Cesar	Doideira virou minha cabeça	C20	DVD	
+67.08	Os Matogrossenses	Cantando e dançando 	C20	DVD	
+67.09	Fou	Violar casa	C20	DVD	
+67.10	Breno e Caio Cesar	Doideira virou minha cabeça	C20	DVD	
+67.11	Dani Marise Di Prigila	Banda G. Geral	C20	DVD	
+67.12	Hino de Santana de Parnaíba	Hino de Santana de Parnaíba	C20	DVD	
+67.13	Karnaval Santana de Parnaíba	Lacrado	C20	DVD	
+67.14	Karnaval Santana de Parnaíba	Lacrado	C20	DVD	
+67.15	Doação Ralph já inventariados		C20	DVD	
+67.16			C20	DVD	
+67.17	Luther Vandross	One Night With You	C20	DVD	1997
+67.18	Meat Loaf	Storytellers	C20	DVD	1999
+67.19		The Monkees Gratest Hits	C20	DVD	1972
+67.20	Stones	Rock'n'Roll	C20	DVD	1974
+67.21	Pink Floyd	Wish You Were Here	C20	DVD	
+67.22	Elektra	Bread - Anthology of Bread	C20	DVD	
+67.23	The Alan Persons	Ammonia Avenue	C20	DVD	1984
+67.24	Gypsy		C20	DVD	
+67.25	Back to the 80'		C20	DVD	
+67.26	Golden Years		C20	DVD	1967
+67.27	Dan Fogelberg	The Wild Places	C20	DVD	
+67.28	The Alan Persons	Vulture	C20	DVD	
+67.29	Natalie Cole	Take a Look	C20	DVD	1993
+67.30	Guilherme Arantes	Amanhã	C20	DVD	
+67.31	A Decade of Steely Dam		C20	DVD	1985
+67.32	Procol Harum	Shine on Brightly	C20	DVD	
+67.33	Kenny Rogers	Loveis Strange	C20	DVD	1990
+67.34	Paulanka	Rocks Swing	C20	DVD	
+67.35	George Michael	Five Live	C20	DVD	
+67.36	Emerson Lake S Palmer		C20	DVD	
+67.37	Tommy James	Anthology	C20	DVD	
+67.38	Quatrophenia	The Who	C20	DVD	
+67.39	Genesis		C20	DVD	
+67.40	RPM	Radio Pirata	C20	DVD	
+67.41	Cazuza	Exagerado	C20	DVD	
+67.42	Paul Mc Carteney	All the Best	C20	DVD	
+67.43	Rod Stwart	The Ballad Album	C20	DVD	
+67.44	Paul Summer	The Rhythm of Saint	C20	DVD	
+67.45	Genesis	Turn it On Again	C20	DVD	
+67.46	Guns N' Roses	The Spaghetti Incident	C20	DVD	
+67.47	Down Lee Roth	Crazy From a Sscret World	C20	DVD	
+67.48	The Beach Boys	Endlless Summer	C20	DVD	
+67.49	The Whole of 	The Music of Me	C20	DVD	
+67.50	Procol Harum	A Whiter shade of	C20	DVD	
+67.51	Peter Grabriel	Live From a Secret World 	C20	DVD	1993
+67.52	Billie Joel	Greatest Hits Vol I e II	C20	DVD	1985
+67.53	Chaveiro Não É CD	Vote Fragoso	C20	DVD	
+67.54	Gloria Estefan	Greatest Hits Vol I e II	C20	DVD	
+67.55	The Moody Blues	Days of Future Passad	C20	DVD	1967
+67.56	Carly Simon	Greatest Hits Live	C20	DVD	1988
+67.57	Procol Harum	Home	C20	DVD	
+67.58	Kenny Rogers	The Best of 	C20	DVD	1989
+67.59	History	America's Greatest Hits	C20	DVD	1975
+67.60	Eagle	Hotel California	C20	DVD	1976
+67.61	The Alan Persons	Robot	C20	DVD	1977
+67.62	Forest Gump	The Soundtrack	C20	DVD	1994
+67.63	Jethro Tull	Aqualung	C20	DVD	1973
+67.64	The Association	Greatest Hits	C20	DVD	
+67.65	The Alan Persons	Stereotomy	C20	DVD	1985
+67.66	Stones	Sticky Fingers	C20	DVD	1994
+67.67	Rod Stwart	Greatest Hits	C20	DVD	1987
+67.68	Traveling Wilburys	Vol 3	C20	DVD	1990
+67.69	Billie Joel	The Stranger	C20	DVD	1977
+67.70	Kenny Rogers	Greatest Hits	C20	DVD	1988
+67.71	Kenny Rogers	Love Will Turn You Around	C20	DVD	1982
+67.72	John Barleykorn	Traffic	C20	DVD	1970
+67.73	The President of USA	Pure Frosting	C20	DVD	1998
+67.74	Lovin' Spoonful	19 greatest hits	C20	DVD	1995
+67.75	Bruce Springteen	Greatest Hits	C20	DVD	1995
+67.76	Traffic		C20	DVD	1968
+67.77	The Mamas S the Paris	16 of their greatest hits	C20	DVD	1986
+67.78	A tribute to David Bowie	A tribute to David Bowie	C20	DVD	
+67.79	Back to the 60'	O Album da Decada	C20	DVD	
+67.80	The Ultimate Rascals		C20	DVD	1986
+67.81	Bryan Adams	On a day like today	C20	DVD	1998
+67.82	Lionel Richie	Dancing on the Oiling	C20	DVD	1986
+67.83	Bto's Greats	Bachman Turner Overdrive	C20	DVD	1986
+67.84	Living Bar	Boss	C20	DVD	
+67.85		Dixie Chicks - Live	C20	DVD	
+67.86	Ally Mc Beal	Heart And Soul	C20	DVD	
+67.87		Backup - PST	C20	DVD	
+67.88		Country Dance	C20	DVD	
+67.89		Club Privee	C20	DVD	
+67.90		Tony Braxton	C20	DVD	
+67.91		Back up Veronica	C20	DVD	
+67.92		Ferry Corsten	C20	DVD	2008
+67.93		Asot 335	C20	DVD	2008
+67.94		Asot 350	C20	DVD	2008
+67.95		Above e Beyond	C20	DVD	
+67.96		Undercover	C20	DVD	1994
+67.97		Coyote - Ugly	C20	DVD	
+67.98	Santana	Supernatural	C20	DVD	
+67.99	Nsync	No String Attached	C20	DVD	
+`; 
+
+// Parse do CSV com PapaParse (tabulação da planilha)
+const parsed = Papa.parse(csvData.trim(), { header: true, delimiter: "\t" }).data;
+
+// Cria colunas extras de Vinil/CD/DVD/K7 → Sim/Não
+parsed.forEach(r => {
+    const suporte = r.Obs ? r.Obs.toLowerCase() : "";
+    r.Vinil = suporte.includes("vinil") ? "Sim" : "Não";
+    r.CD = suporte.includes("cd") ? "Sim" : "Não";
+    r.DVD = suporte.includes("dvd") ? "Sim" : "Não";
+    r.K7 = suporte.includes("k7") ? "Sim" : "Não";
+});
+
+const tableContainer = document.getElementById("table-container");
+const searchInput = document.getElementById("search");
+
+function renderTable(rows){
+    if (!rows.length){ 
+        tableContainer.innerHTML = "<p>Nenhum resultado.</p>"; 
+        return; 
+    }
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const trh = document.createElement("tr");
+    Object.keys(rows[0]).forEach(k => {
+        const th = document.createElement("th"); 
+        th.textContent = k; 
+        trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    rows.forEach(r => {
+        const tr = document.createElement("tr");
+        Object.values(r).forEach(v => {
+            const td = document.createElement("td"); 
+            td.textContent = v; 
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableContainer.innerHTML = "";
+    tableContainer.appendChild(table);
+}
+
+// Render inicial
+renderTable(parsed);
+
+// Filtro de busca
+searchInput.addEventListener("input", () => {
+    const q = searchInput.value.toLowerCase();
+    const filtered = parsed.filter(r => 
+        Object.values(r).some(v => String(v).toLowerCase().includes(q))
+    );
+    renderTable(filtered);
+});
+</script>
+</body>
+</html>
